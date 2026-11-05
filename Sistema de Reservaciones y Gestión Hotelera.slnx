@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="Sistema de Reservaciones y Gestión Hotelera/Sistema de Reservaciones y Gestión Hotelera.csproj" />
+  <Project Path="SistemaHotelero.AccesoDatos/SistemaHotelero.AccesoDatos.csproj" />
+  <Project Path="SistemaHotelero.Dominio/SistemaHotelero.Dominio.csproj" />
+  <Project Path="SistemaHotelero.LogicaNegocio/SistemaHotelero.LogicaNegocio.csproj" />
+  <Project Path="SistemaHotelero.Utilitarios/SistemaHotelero.Utilitarios.csproj" />
 </Solution>
