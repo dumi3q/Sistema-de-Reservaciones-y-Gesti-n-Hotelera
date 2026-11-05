@@ -1,4 +1,3 @@
-
 /* =====================================================================
    Sistema de Reservaciones y Gestión Hotelera — Base de datos (v2)
    SQL Server 2019+  |  Script de creación desde cero
@@ -27,6 +26,9 @@
    TipoDocumento      1 Cedula 2 DNI 3 Pasaporte
    EstadoResMesa      1 Pendiente 2 Confirmada 3 Completada 4 Cancelada
    EstadoCorreo       1 Pendiente 2 Enviado 3 Fallido
+   EstadoSolicitud    1 Pendiente 2 Asignada 3 EnProceso 4 Completada 5 Cancelada
+   PrioridadSolicitud 1 Baja 2 Media 3 Alta
+   AreaSolicitud      1 Limpieza 2 Mantenimiento 3 Recepcion
    ===================================================================== */
  
 SET ANSI_NULLS ON;
@@ -215,22 +217,45 @@ CREATE TABLE dbo.TiposHabitacion (
 );
 GO
  
+-- El hotel tiene 4 edificios de 6 pisos cada uno
+CREATE TABLE dbo.Edificios (
+    Id             int IDENTITY(1,1) NOT NULL,
+    Codigo         char(1)        NOT NULL,      -- A, B, C, D
+    Nombre         nvarchar(60)   NOT NULL,
+    CantidadPisos  tinyint        NOT NULL CONSTRAINT DF_Edificios_Pisos DEFAULT (6),
+    Descripcion    nvarchar(300)  NULL,
+    Activo         bit            NOT NULL CONSTRAINT DF_Edificios_Activo DEFAULT (1),
+    CONSTRAINT PK_Edificios PRIMARY KEY (Id),
+    CONSTRAINT UQ_Edificios_Codigo UNIQUE (Codigo),
+    CONSTRAINT UQ_Edificios_Nombre UNIQUE (Nombre),
+    CONSTRAINT CK_Edificios_Codigo CHECK (Codigo LIKE '[A-Z]'),
+    CONSTRAINT CK_Edificios_Pisos CHECK (CantidadPisos BETWEEN 1 AND 6)
+);
+GO
+ 
+/* Numero es único dentro de cada edificio (A-101 y B-101 pueden coexistir).
+   El piso no puede superar los pisos del edificio: CHECK de 1 a 6 aquí,
+   y la lógica de negocio valida contra Edificios.CantidadPisos. */
 CREATE TABLE dbo.Habitaciones (
     Id                int IDENTITY(1,1) NOT NULL,
+    EdificioId        int           NOT NULL,
     TipoHabitacionId  int           NOT NULL,
     Numero            nvarchar(10)  NOT NULL,
-    Piso              smallint      NOT NULL,
+    Piso              tinyint       NOT NULL,
     EstadoOperativo   tinyint       NOT NULL CONSTRAINT DF_Habitaciones_Estado DEFAULT (1),
     Activo            bit           NOT NULL CONSTRAINT DF_Habitaciones_Activo DEFAULT (1),
     RowVersion        rowversion    NOT NULL,
     CONSTRAINT PK_Habitaciones PRIMARY KEY (Id),
-    CONSTRAINT UQ_Habitaciones_Numero UNIQUE (Numero),
+    CONSTRAINT UQ_Habitaciones_Edificio_Numero UNIQUE (EdificioId, Numero),
+    CONSTRAINT FK_Habitaciones_Edificios FOREIGN KEY (EdificioId) REFERENCES dbo.Edificios (Id),
     CONSTRAINT FK_Habitaciones_Tipos FOREIGN KEY (TipoHabitacionId) REFERENCES dbo.TiposHabitacion (Id),
+    CONSTRAINT CK_Habitaciones_Piso CHECK (Piso BETWEEN 1 AND 6),
     CONSTRAINT CK_Habitaciones_Estado CHECK (EstadoOperativo BETWEEN 1 AND 6)
 );
 GO
  
 CREATE INDEX IX_Habitaciones_Tipo ON dbo.Habitaciones (TipoHabitacionId) INCLUDE (EstadoOperativo, Activo);
+CREATE INDEX IX_Habitaciones_Edificio_Piso ON dbo.Habitaciones (EdificioId, Piso) INCLUDE (Numero, EstadoOperativo);
 GO
  
 CREATE TABLE dbo.Amenidades (
@@ -488,6 +513,95 @@ CREATE TABLE dbo.AccesosEstadia (
 GO
  
 CREATE INDEX IX_Accesos_Estadia ON dbo.AccesosEstadia (EstadiaId);
+GO
+ 
+/* =====================================================================
+   SOLICITUDES DE SERVICIO A LA HABITACIÓN
+   (limpieza, toallas, amenidades, mantenimiento, etc.)
+   ===================================================================== */
+ 
+-- Area: 1 Limpieza, 2 Mantenimiento, 3 Recepcion
+CREATE TABLE dbo.TiposSolicitud (
+    Id                     int IDENTITY(1,1) NOT NULL,
+    Nombre                 nvarchar(60)   NOT NULL,
+    Descripcion            nvarchar(200)  NULL,
+    Area                   tinyint        NOT NULL,
+    TiempoObjetivoMinutos  smallint       NOT NULL,
+    Activo                 bit            NOT NULL CONSTRAINT DF_TiposSolicitud_Activo DEFAULT (1),
+    CONSTRAINT PK_TiposSolicitud PRIMARY KEY (Id),
+    CONSTRAINT UQ_TiposSolicitud_Nombre UNIQUE (Nombre),
+    CONSTRAINT CK_TiposSolicitud_Area CHECK (Area BETWEEN 1 AND 3),
+    CONSTRAINT CK_TiposSolicitud_Tiempo CHECK (TiempoObjetivoMinutos > 0)
+);
+GO
+ 
+/* Prioridad: 1 Baja, 2 Media, 3 Alta
+   Estado: 1 Pendiente, 2 Asignada, 3 EnProceso, 4 Completada, 5 Cancelada
+   El huésped solo puede crear solicitudes si tiene una estadía Activa en esa
+   habitación (validado en LogicaNegocio). El personal puede crear solicitudes
+   sin estadía (por ejemplo, mantenimiento preventivo): EstadiaId NULL. */
+CREATE TABLE dbo.SolicitudesServicio (
+    Id                      int IDENTITY(1,1) NOT NULL,
+    HabitacionId            int             NOT NULL,
+    EstadiaId               int             NULL,
+    TipoSolicitudId         int             NOT NULL,
+    Descripcion             nvarchar(500)   NOT NULL,
+    Prioridad               tinyint         NOT NULL CONSTRAINT DF_Solicitudes_Prioridad DEFAULT (2),
+    Estado                  tinyint         NOT NULL CONSTRAINT DF_Solicitudes_Estado DEFAULT (1),
+    SolicitadoPorUsuarioId  int             NOT NULL,
+    AsignadoAUsuarioId      int             NULL,
+    FechaSolicitudUtc       datetime2(0)    NOT NULL CONSTRAINT DF_Solicitudes_Fecha DEFAULT (SYSUTCDATETIME()),
+    FechaPreferidaUtc       datetime2(0)    NULL,
+    FechaAsignacionUtc      datetime2(0)    NULL,
+    FechaInicioUtc          datetime2(0)    NULL,
+    FechaCompletadaUtc      datetime2(0)    NULL,
+    ComentarioCierre        nvarchar(500)   NULL,
+    RowVersion              rowversion      NOT NULL,
+    CONSTRAINT PK_SolicitudesServicio PRIMARY KEY (Id),
+    CONSTRAINT FK_Solicitudes_Habitaciones FOREIGN KEY (HabitacionId) REFERENCES dbo.Habitaciones (Id),
+    CONSTRAINT FK_Solicitudes_Estadias FOREIGN KEY (EstadiaId) REFERENCES dbo.Estadias (Id),
+    CONSTRAINT FK_Solicitudes_Tipos FOREIGN KEY (TipoSolicitudId) REFERENCES dbo.TiposSolicitud (Id),
+    CONSTRAINT FK_Solicitudes_Solicitante FOREIGN KEY (SolicitadoPorUsuarioId) REFERENCES dbo.Usuarios (Id),
+    CONSTRAINT FK_Solicitudes_Asignado FOREIGN KEY (AsignadoAUsuarioId) REFERENCES dbo.Usuarios (Id),
+    CONSTRAINT CK_Solicitudes_Prioridad CHECK (Prioridad BETWEEN 1 AND 3),
+    CONSTRAINT CK_Solicitudes_Estado CHECK (Estado BETWEEN 1 AND 5),
+    CONSTRAINT CK_Solicitudes_Asignacion CHECK (Estado NOT IN (2, 3, 4)
+                                              OR (AsignadoAUsuarioId IS NOT NULL AND FechaAsignacionUtc IS NOT NULL)),
+    CONSTRAINT CK_Solicitudes_Inicio CHECK (Estado NOT IN (3, 4) OR FechaInicioUtc IS NOT NULL),
+    CONSTRAINT CK_Solicitudes_Completada CHECK ((Estado = 4 AND FechaCompletadaUtc IS NOT NULL)
+                                              OR (Estado <> 4 AND FechaCompletadaUtc IS NULL)),
+    CONSTRAINT CK_Solicitudes_Cancelada CHECK (Estado <> 5 OR ComentarioCierre IS NOT NULL),
+    CONSTRAINT CK_Solicitudes_Fechas CHECK (
+            (FechaAsignacionUtc IS NULL OR FechaAsignacionUtc >= FechaSolicitudUtc)
+        AND (FechaInicioUtc IS NULL OR FechaAsignacionUtc IS NULL OR FechaInicioUtc >= FechaAsignacionUtc)
+        AND (FechaCompletadaUtc IS NULL OR FechaInicioUtc IS NULL OR FechaCompletadaUtc >= FechaInicioUtc))
+);
+GO
+ 
+CREATE INDEX IX_Solicitudes_Estado_Prioridad ON dbo.SolicitudesServicio (Estado, Prioridad DESC, FechaSolicitudUtc)
+    INCLUDE (HabitacionId, TipoSolicitudId, AsignadoAUsuarioId);
+CREATE INDEX IX_Solicitudes_Asignado ON dbo.SolicitudesServicio (AsignadoAUsuarioId, Estado) WHERE AsignadoAUsuarioId IS NOT NULL;
+CREATE INDEX IX_Solicitudes_Estadia ON dbo.SolicitudesServicio (EstadiaId) WHERE EstadiaId IS NOT NULL;
+CREATE INDEX IX_Solicitudes_Habitacion ON dbo.SolicitudesServicio (HabitacionId, FechaSolicitudUtc);
+GO
+ 
+CREATE TABLE dbo.HistorialSolicitudes (
+    Id              int IDENTITY(1,1) NOT NULL,
+    SolicitudId     int            NOT NULL,
+    UsuarioId       int            NOT NULL,
+    EstadoAnterior  tinyint        NULL,
+    EstadoNuevo     tinyint        NOT NULL,
+    FechaUtc        datetime2(0)   NOT NULL CONSTRAINT DF_HistSol_Fecha DEFAULT (SYSUTCDATETIME()),
+    Comentario      nvarchar(300)  NULL,
+    CONSTRAINT PK_HistorialSolicitudes PRIMARY KEY (Id),
+    CONSTRAINT FK_HistSol_Solicitudes FOREIGN KEY (SolicitudId) REFERENCES dbo.SolicitudesServicio (Id),
+    CONSTRAINT FK_HistSol_Usuarios FOREIGN KEY (UsuarioId) REFERENCES dbo.Usuarios (Id),
+    CONSTRAINT CK_HistSol_Estados CHECK ((EstadoAnterior IS NULL OR EstadoAnterior BETWEEN 1 AND 5)
+                                       AND EstadoNuevo BETWEEN 1 AND 5)
+);
+GO
+ 
+CREATE INDEX IX_HistSol_Solicitud ON dbo.HistorialSolicitudes (SolicitudId, FechaUtc);
 GO
  
 /* =====================================================================
@@ -924,7 +1038,8 @@ INSERT INTO dbo.Roles (Nombre, Descripcion) VALUES
  (N'Recepcionista', N'Clientes, habitaciones, reservaciones, check-in, check-out y pagos'),
  (N'Cajero',        N'Pagos, saldos y comprobantes'),
  (N'Restaurante',   N'Menú, pedidos y estados de preparación'),
- (N'Huesped',       N'Perfil, reservaciones y pedidos propios');
+ (N'Servicios',     N'Limpieza y mantenimiento: atiende solicitudes de las habitaciones'),
+ (N'Huesped',       N'Perfil, reservaciones, pedidos y solicitudes propias');
 GO
  
 INSERT INTO dbo.Permisos (Codigo, Descripcion) VALUES
@@ -956,7 +1071,10 @@ INSERT INTO dbo.Permisos (Codigo, Descripcion) VALUES
  (N'Pedidos.CambiarEstado',     N'Cambiar el estado de preparación'),
  (N'Perfil.Propio',             N'Consultar y editar el perfil propio'),
  (N'Reservaciones.Propias',     N'Crear, consultar y cancelar reservaciones propias'),
- (N'Pedidos.Propios',           N'Crear, consultar y cancelar pedidos propios');
+ (N'Pedidos.Propios',           N'Crear, consultar y cancelar pedidos propios'),
+ (N'Solicitudes.Propias',       N'Crear, consultar y cancelar solicitudes de servicio propias'),
+ (N'Solicitudes.Gestionar',     N'Ver todas las solicitudes, crearlas y asignarlas'),
+ (N'Solicitudes.Atender',       N'Ver solicitudes asignadas y cambiar su estado');
 GO
  
 -- Administrador: todos los permisos
@@ -1002,7 +1120,12 @@ FROM (VALUES
     (N'Huesped',       N'Perfil.Propio'),
     (N'Huesped',       N'Habitaciones.Leer'),
     (N'Huesped',       N'Reservaciones.Propias'),
-    (N'Huesped',       N'Pedidos.Propios')
+    (N'Huesped',       N'Pedidos.Propios'),
+    (N'Huesped',       N'Solicitudes.Propias'),
+    (N'Recepcionista', N'Solicitudes.Gestionar'),
+    (N'Supervisor',    N'Solicitudes.Gestionar'),
+    (N'Servicios',     N'Solicitudes.Atender'),
+    (N'Servicios',     N'Habitaciones.Leer')
 ) AS v (Rol, Permiso)
 JOIN dbo.Roles r    ON r.Nombre = v.Rol
 JOIN dbo.Permisos p ON p.Codigo = v.Permiso;
@@ -1043,21 +1166,33 @@ INSERT INTO dbo.ReglasTarifa (TipoHabitacionId, Nombre, Tipo, FechaInicio, Fecha
  (NULL, N'Verano 2027',             1, '2027-01-06', '2027-04-30', NULL, 1, 10.00, 1);
 GO
  
-INSERT INTO dbo.Habitaciones (TipoHabitacionId, Numero, Piso)
-SELECT t.Id, v.Numero, v.Piso
-FROM (VALUES
-    (N'Simple',             N'101', 1),
-    (N'Simple',             N'102', 1),
-    (N'Doble Estándar',     N'103', 1),
-    (N'Doble Estándar',     N'104', 1),
-    (N'Doble Estándar',     N'201', 2),
-    (N'Familiar',           N'202', 2),
-    (N'Familiar',           N'203', 2),
-    (N'Suite Ejecutiva',    N'301', 3),
-    (N'Suite Ejecutiva',    N'302', 3),
-    (N'Suite Presidencial', N'401', 4)
-) AS v (Tipo, Numero, Piso)
-JOIN dbo.TiposHabitacion t ON t.Nombre = v.Tipo;
+INSERT INTO dbo.Edificios (Codigo, Nombre, CantidadPisos) VALUES
+ ('A', N'Edificio A', 6),
+ ('B', N'Edificio B', 6),
+ ('C', N'Edificio C', 6),
+ ('D', N'Edificio D', 6);
+GO
+ 
+/* 4 habitaciones por piso en cada edificio = 96 habitaciones.
+   Número = piso * 100 + posición (101..104, 201..204, ..., 601..604).
+   Posición 1 Simple, 2 Doble Estándar, 3 Familiar, 4 Suite Ejecutiva;
+   en el piso 6 la posición 4 es Suite Presidencial. */
+INSERT INTO dbo.Habitaciones (EdificioId, TipoHabitacionId, Numero, Piso)
+SELECT e.Id,
+       t.Id,
+       CAST(p.Piso * 100 + n.Posicion AS nvarchar(10)),
+       p.Piso
+FROM dbo.Edificios e
+CROSS JOIN (VALUES (1), (2), (3), (4), (5), (6)) AS p (Piso)
+CROSS JOIN (VALUES (1), (2), (3), (4)) AS n (Posicion)
+JOIN dbo.TiposHabitacion t ON t.Nombre =
+     CASE
+         WHEN n.Posicion = 1 THEN N'Simple'
+         WHEN n.Posicion = 2 THEN N'Doble Estándar'
+         WHEN n.Posicion = 3 THEN N'Familiar'
+         WHEN p.Piso = 6     THEN N'Suite Presidencial'
+         ELSE N'Suite Ejecutiva'
+     END;
 GO
  
 INSERT INTO dbo.HabitacionAmenidades (HabitacionId, AmenidadId)
@@ -1069,6 +1204,17 @@ JOIN dbo.Amenidades a ON
   OR (t.Nombre IN (N'Suite Ejecutiva', N'Suite Presidencial') AND a.Nombre IN (N'Cama king', N'Minibar', N'Balcón'))
   OR (t.Nombre = N'Suite Presidencial' AND a.Nombre IN (N'Jacuzzi', N'Vista al mar'))
   OR (t.Nombre = N'Familiar' AND a.Nombre IN (N'Cama king', N'Balcón'));
+GO
+ 
+INSERT INTO dbo.TiposSolicitud (Nombre, Descripcion, Area, TiempoObjetivoMinutos) VALUES
+ (N'Limpieza de habitación',  N'Limpieza completa durante la estadía',          1, 60),
+ (N'Toallas y blancos',       N'Toallas, sábanas o almohadas adicionales',      1, 20),
+ (N'Amenidades',              N'Jabón, champú, papel higiénico, agua',          1, 20),
+ (N'Aire acondicionado',      N'No enfría, hace ruido o gotea',                 2, 45),
+ (N'Plomería',                N'Fugas, inodoro, ducha o lavamanos',             2, 45),
+ (N'Electricidad',            N'Luces, tomacorrientes o televisor',             2, 45),
+ (N'Cerradura o acceso',      N'La tarjeta o el código no abre la puerta',      3, 15),
+ (N'Otro',                    N'Cualquier otra solicitud',                      3, 30);
 GO
  
 INSERT INTO dbo.CategoriasPlatillo (Nombre, Orden) VALUES
@@ -1100,4 +1246,3 @@ GO
  
 PRINT N'HotelDB creada correctamente.';
 GO
- 

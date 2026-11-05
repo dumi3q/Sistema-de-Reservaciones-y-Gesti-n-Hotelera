@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="SistemaHotelero.AccesoDatos/SistemaHotelero.AccesoDatos.csproj" />
+  <Project Path="SistemaHotelero.API/SistemaHotelero.API.csproj" />
   <Project Path="SistemaHotelero.Dominio/SistemaHotelero.Dominio.csproj" />
   <Project Path="SistemaHotelero.LogicaNegocio/SistemaHotelero.LogicaNegocio.csproj" />
   <Project Path="SistemaHotelero.Utilitarios/SistemaHotelero.Utilitarios.csproj" />
