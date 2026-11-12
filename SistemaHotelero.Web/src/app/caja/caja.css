@@ -1,0 +1,39 @@
+.cash-tabs,
+.cash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+dialog {
+  width: min(470px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--ink);
+}
+
+dialog::backdrop {
+  background: #182a21a6;
+}
+
+dialog h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+dialog select {
+  min-height: 42px;
+  max-width: 100%;
+  padding: 8px;
+  border: 1px solid #c6d3c6;
+  border-radius: 7px;
+  background: white;
+  color: var(--ink);
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+  margin-top: 15px;
+}

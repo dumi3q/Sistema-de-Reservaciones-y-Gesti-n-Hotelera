@@ -1,0 +1,123 @@
+<section class="page" aria-labelledby="room-admin-title" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">ADMINISTRACIÓN</p>
+      <h1 id="room-admin-title">Habitaciones y tarifas</h1>
+      <p>Ajusta la tarifa, las amenidades y la disponibilidad por habitación.</p>
+    </div>
+    <a class="action secondary" routerLink="/explorar/reservar">Ver selector de habitaciones</a>
+  </header>
+  <app-admin-nav />
+  <p class="demo-note-inline">Los cambios se aplican en la demo y se reinician al recargar.</p>
+
+  <div class="work-grid">
+    <section class="reception-panel work-pane" aria-label="Inventario de habitaciones">
+      <div class="work-heading admin-filters">
+        <label class="field"
+          >Buscar habitación
+          <input
+            #search
+            type="search"
+            placeholder="Código o tipo"
+            (input)="query.set(search.value)"
+          />
+        </label>
+        <label class="field"
+          >Edificio
+          <select #buildingSelect (change)="building.set(buildingSelect.value)">
+            <option value="">Todos</option>
+            @for (entry of buildings; track entry.code) {
+              <option [value]="entry.code">{{ entry.name }}</option>
+            }
+          </select>
+        </label>
+      </div>
+      <div class="work-scroll" tabindex="0" role="region" aria-label="Resultados de habitaciones">
+        @if (loading()) {
+          <div class="loading-rows" role="status" aria-label="Cargando habitaciones">
+            @for (row of [1, 2, 3, 4]; track row) {
+              <app-skeleton [height]="46" />
+            }
+          </div>
+        } @else {
+          @for (room of filtered(); track room.id) {
+            <button
+              class="work-choice"
+              type="button"
+              [attr.aria-pressed]="selectedId() === room.id"
+              (click)="edit(room); editor.scrollIntoView({ block: 'nearest' })"
+            >
+              <span
+                ><strong>{{ room.id }}</strong
+                ><small>{{ room.type }}</small></span
+              >
+              <span
+                ><strong>{{ room.price | currency: 'USD' }}</strong>
+                @if (room.maintenance) {
+                  <small>Mantenimiento</small>
+                }
+              </span>
+            </button>
+          } @empty {
+            <p class="empty">No encontramos habitaciones con esos filtros.</p>
+          }
+        }
+      </div>
+    </section>
+
+    <section #editor class="reception-panel work-pane" aria-label="Editar habitación">
+      @if (loading()) {
+        <div class="loading-rows">
+          <app-skeleton [height]="52" /><app-skeleton [height]="95" /><app-skeleton [height]="95" />
+        </div>
+      } @else if (selected(); as room) {
+        <div class="work-heading detail-head">
+          <div>
+            <h2>Habitación {{ room.id }}</h2>
+            <small>{{ room.type }} · Piso {{ room.floor }} · {{ room.adults }} adultos</small>
+          </div>
+          @if (room.maintenance) {
+            <span class="badge">Mantenimiento</span>
+          }
+        </div>
+        <form class="admin-form" [formGroup]="form" (ngSubmit)="save()">
+          <div class="work-scroll form-fields">
+            <label class="field"
+              >Tarifa por noche (USD)
+              <input type="number" min="0.01" max="100000" step="0.01" formControlName="price" />
+            </label>
+            <label class="field"
+              >Amenidades <small>Una por línea</small>
+              <textarea rows="4" formControlName="amenities"></textarea>
+            </label>
+            <label class="field"
+              >Fotos <small>Un enlace HTTPS por línea</small>
+              <textarea rows="3" formControlName="photos"></textarea>
+            </label>
+            <label class="check"
+              ><input type="checkbox" formControlName="maintenance" /> Bloquear por
+              mantenimiento</label
+            >
+          </div>
+          <div class="work-footer">
+            <button class="action primary" type="submit">Guardar cambios</button>
+            <button
+              class="action secondary"
+              type="button"
+              [disabled]="form.pristine"
+              (click)="edit(room); editor.scrollIntoView({ block: 'nearest' })"
+            >
+              Descartar
+            </button>
+            <p class="form-message" role="status">{{ notice() }}</p>
+            @if (error()) {
+              <p class="form-error" role="alert">{{ error() }}</p>
+            }
+          </div>
+        </form>
+      } @else {
+        <p class="empty">Selecciona una habitación para editarla.</p>
+      }
+    </section>
+  </div>
+</section>

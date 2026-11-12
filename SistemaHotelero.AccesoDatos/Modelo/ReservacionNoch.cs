@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SistemaHotelero.AccesoDatos.Modelo;
@@ -20,8 +20,6 @@ public partial class ReservacionNoch
     public decimal TarifaFinal { get; set; }
 
     public bool Activa { get; set; }
-
-    public virtual Habitacione Habitacion { get; set; } = null!;
 
     public virtual ReservacionHabitacione ReservacionHabitacion { get; set; } = null!;
 }

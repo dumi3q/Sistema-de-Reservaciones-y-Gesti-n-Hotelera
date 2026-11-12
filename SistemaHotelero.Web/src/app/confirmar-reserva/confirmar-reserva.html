@@ -1,0 +1,100 @@
+<section class="page" aria-labelledby="confirm-title" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">TU ESTADÍA</p>
+      <h1 id="confirm-title">Revisa tu reservación</h1>
+      <p>Confirma que la habitación, las fechas y la cantidad de adultos sean correctas.</p>
+    </div>
+    <a class="action secondary" routerLink="/visitar/habitaciones" [queryParams]="params"
+      >Editar selección</a
+    >
+  </header>
+
+  <div class="confirmation-grid">
+    <article class="reception-panel stay-summary">
+      @if (loading()) {
+        <div class="loading-rows" role="status" aria-label="Cargando resumen">
+          <app-skeleton [height]="65" /><app-skeleton [height]="112" /><app-skeleton
+            [height]="50"
+          />
+        </div>
+      } @else if (room(); as selected) {
+        @if (draft; as selection) {
+          <h2>
+            {{ selected.type }} <span>Habitación {{ selected.id }}</span>
+          </h2>
+          <dl>
+            <div>
+              <dt>Entrada</dt>
+              <dd>
+                {{ selection.start | date: 'dd/MM/yyyy' : 'UTC' }} desde las
+                {{ settings().checkIn }}
+              </dd>
+            </div>
+            <div>
+              <dt>Salida</dt>
+              <dd>
+                {{ selection.end | date: 'dd/MM/yyyy' : 'UTC' }} hasta las {{ settings().checkOut }}
+              </dd>
+            </div>
+            <div>
+              <dt>Adultos</dt>
+              <dd>{{ selection.guests }}</dd>
+            </div>
+            <div>
+              <dt>Noches</dt>
+              <dd>{{ nights }}</dd>
+            </div>
+          </dl>
+          @if (deposit() > 0) {
+            <p class="muted">
+              Anticipo estimado
+              {{ deposit() | currency: 'USD' }}.
+            </p>
+          }
+          <div class="estimate-total">
+            <span>Subtotal de hospedaje</span>
+            <strong>{{ nightly() * nights | currency: 'USD' }}</strong>
+          </div>
+          <p class="muted">
+            {{ nightly() | currency: 'USD' }} por noche. Tarifa de ejemplo antes de impuestos o
+            cargos.
+          </p>
+        }
+      } @else {
+        <h2>Selecciona una habitación</h2>
+        <p class="muted">Elige fechas, cantidad de adultos y una habitación para ver el resumen.</p>
+        <a class="action primary" routerLink="/visitar/habitaciones">Ver habitaciones</a>
+      }
+    </article>
+
+    @if (!loading() && room()) {
+      <article class="reception-panel stay-summary next-step">
+        @if (available()) {
+          <h2>Completa tu reservación</h2>
+          <a class="action secondary" routerLink="/login" [queryParams]="params">Iniciar sesión</a>
+          <p class="muted">
+            Para probar el flujo hoy, puedes crear una reserva ficticia. Se reinicia al recargar.
+          </p>
+          <a class="action primary" routerLink="/visitar/pago-reserva" [queryParams]="params">
+            Continuar al pago de prueba
+          </a>
+        } @else {
+          <h2>Selección no disponible</h2>
+          <p class="muted">
+            Verifica que las fechas sean válidas para la demo y elige una habitación disponible.
+          </p>
+          <a class="action primary" routerLink="/visitar/habitaciones" [queryParams]="params"
+            >Volver al selector</a
+          >
+        }
+        <div class="advisor">
+          <h3>¿Necesitas ayuda para reservar?</h3>
+          <p class="muted">Abre un borrador de correo con los datos de tu selección.</p>
+          <a class="action secondary" [href]="advisorLink()">Contactar a un asesor</a>
+          <small>Correo de demostración</small>
+        </div>
+      </article>
+    }
+  </div>
+</section>

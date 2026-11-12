@@ -1,0 +1,17 @@
+<main class="page">
+  <section class="reception-panel empty" aria-labelledby="state-title">
+    <p class="eyebrow">{{ forbidden ? '403' : '404' }}</p>
+    <h1 id="state-title">{{ forbidden ? 'Acceso denegado' : 'Página no encontrada' }}</h1>
+    <p>
+      {{
+        forbidden
+          ? 'Esta sección requiere permisos adicionales.'
+          : 'Revisa la dirección o vuelve al inicio del hotel.'
+      }}
+    </p>
+    <a class="action primary" routerLink="/visitar">Ir al inicio</a>
+    @if (forbidden) {
+      <a class="action secondary" routerLink="/login">Iniciar sesión</a>
+    }
+  </section>
+</main>

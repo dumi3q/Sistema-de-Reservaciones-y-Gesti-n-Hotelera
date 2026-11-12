@@ -1,0 +1,161 @@
+<section class="page" aria-labelledby="my-bookings-title" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">TU ESTADÍA</p>
+      <h1 id="my-bookings-title">Mis reservaciones</h1>
+      <p>Consulta las fechas, el estado y el detalle de tus reservas de prueba.</p>
+    </div>
+    <div class="booking-tabs">
+      <a class="action secondary" routerLink="/visitar/mis-facturas">Mis facturas</a>
+      <a class="action primary" routerLink="/visitar/habitaciones">Buscar habitación</a>
+    </div>
+  </header>
+  <p class="demo-note-inline">
+    Aquí aparecen las reservas de prueba de esta visita. Se reinician al recargar.
+  </p>
+  <p class="notice" role="status">{{ message() }}</p>
+
+  <div class="work-grid" [class.show-detail]="selected()">
+    <section class="reception-panel work-pane booking-list" aria-label="Listado de reservaciones">
+      <div class="work-heading booking-tabs" role="group" aria-label="Filtrar reservaciones">
+        <button
+          class="action"
+          [class.primary]="tab() === 'activas'"
+          [class.secondary]="tab() !== 'activas'"
+          type="button"
+          [attr.aria-pressed]="tab() === 'activas'"
+          (click)="switchTab('activas')"
+        >
+          Activas
+          @if (!loading()) {
+            ({{ groups().activas.length }})
+          }
+        </button>
+        <button
+          class="action"
+          [class.primary]="tab() === 'historial'"
+          [class.secondary]="tab() !== 'historial'"
+          type="button"
+          [attr.aria-pressed]="tab() === 'historial'"
+          (click)="switchTab('historial')"
+        >
+          Historial
+          @if (!loading()) {
+            ({{ groups().historial.length }})
+          }
+        </button>
+      </div>
+      <div class="work-scroll" tabindex="0" role="region" aria-label="Resultados de reservaciones">
+        @if (loading()) {
+          <div class="loading-rows" role="status" aria-label="Cargando reservaciones">
+            @for (row of [1, 2, 3]; track row) {
+              <app-skeleton [height]="48" />
+            }
+          </div>
+        } @else {
+          @for (item of groups()[tab()]; track item.id) {
+            <button
+              class="work-choice"
+              type="button"
+              [attr.aria-pressed]="selectedId() === item.id"
+              (click)="selectedId.set(item.id)"
+            >
+              <span
+                ><strong>{{ item.roomId }}</strong
+                ><small>{{ item.id }} · {{ item.start | date: 'dd/MM/yyyy' : 'UTC' }}</small></span
+              >
+              <span class="badge" [attr.data-status]="item.status">{{ item.status }}</span>
+            </button>
+          } @empty {
+            <p class="empty">
+              {{
+                tab() === 'activas'
+                  ? 'Todavía no tienes reservaciones activas.'
+                  : 'Tu historial está vacío.'
+              }}
+            </p>
+          }
+        }
+      </div>
+    </section>
+
+    <section
+      class="reception-panel work-pane booking-detail"
+      aria-label="Detalle de la reservación"
+    >
+      @if (loading()) {
+        <div class="loading-rows">
+          <app-skeleton [height]="58" /><app-skeleton [height]="120" />
+        </div>
+      } @else if (selected(); as item) {
+        <div class="work-heading detail-head">
+          <div>
+            <h2>Habitación {{ item.roomId }}</h2>
+            <small>{{ item.id }}</small>
+          </div>
+          <span class="badge" [attr.data-status]="item.status">{{ item.status }}</span>
+        </div>
+        <div class="work-scroll booking-facts">
+          <dl>
+            <div>
+              <dt>Entrada</dt>
+              <dd>{{ item.start | date: 'dd/MM/yyyy' : 'UTC' }}</dd>
+            </div>
+            <div>
+              <dt>Salida</dt>
+              <dd>{{ item.end | date: 'dd/MM/yyyy' : 'UTC' }}</dd>
+            </div>
+            <div>
+              <dt>Adultos</dt>
+              <dd>{{ item.guests }}</dd>
+            </div>
+            <div>
+              <dt>Subtotal de hospedaje</dt>
+              <dd>{{ demo.total(item) | currency: 'USD' }}</dd>
+            </div>
+          </dl>
+        </div>
+        <div class="work-footer">
+          <button class="action secondary" type="button" (click)="selectedId.set(null)">
+            Volver al listado
+          </button>
+          @if (item.status === 'Alojado') {
+            <a class="action primary" routerLink="/visitar/servicio-habitacion"
+              >Pedir a la habitación</a
+            >
+          }
+          @if (item.status === 'Alojado') {
+            <a class="action secondary" routerLink="/visitar/mis-solicitudes">Solicitar ayuda</a>
+          }
+          @if (selectedReceipt(); as receipt) {
+            <a class="action primary" [routerLink]="['/visitar/mis-facturas', receipt.id]"
+              >Ver factura de esta estadía</a
+            >
+          }
+          @if (demo.canCancel(item)) {
+            <button class="action secondary cancel-action" type="button" (click)="askCancel(item)">
+              Cancelar reserva
+            </button>
+          }
+        </div>
+      } @else {
+        <p class="empty">Selecciona una reservación para ver su detalle.</p>
+      }
+    </section>
+  </div>
+</section>
+
+<dialog #cancelDialog aria-labelledby="cancel-title" (close)="pending.set(null)">
+  @if (pending(); as item) {
+    <h2 id="cancel-title">¿Cancelar la reservación?</h2>
+    <p>La habitación {{ item.roomId }} volverá a estar disponible para esas fechas.</p>
+    <div class="booking-tabs">
+      <button class="action secondary" type="button" autofocus (click)="cancelDialog.close()">
+        Conservar reserva
+      </button>
+      <button class="action cancel-action" type="button" (click)="cancel()">
+        Sí, cancelar reserva
+      </button>
+    </div>
+  }
+</dialog>

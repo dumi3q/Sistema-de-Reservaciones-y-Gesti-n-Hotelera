@@ -1,0 +1,16 @@
+<section class="contact" aria-label="Datos de contacto del huésped">
+  <h3>Contacto</h3>
+  @if (contact(); as details) {
+    <p>Datos ficticios de la demo</p>
+    <div class="contact-actions">
+      @if (details.phone) {
+        <a [href]="'tel:' + details.phone.replace(/[^+\d]/g, '')">Llamar · {{ details.phone }}</a>
+      }
+      @if (details.email) {
+        <a [href]="emailLink()">Correo · {{ details.email }}</a>
+      }
+    </div>
+  } @else {
+    <p>Este huésped no tiene datos de contacto en la demo.</p>
+  }
+</section>

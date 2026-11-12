@@ -1,0 +1,104 @@
+:host {
+  display: block;
+}
+.form-content {
+  max-width: 390px;
+  padding: 40px 0 25px;
+}
+label {
+  font-size: 14px;
+  color: #354c3c;
+}
+input {
+  font-size: 16px;
+}
+.input-wrap {
+  height: 50px;
+}
+.primary,
+.preview-button {
+  font-size: 15px;
+  min-height: 49px;
+}
+.intro {
+  font-size: 15px;
+  color: #5f6d57;
+}
+.eyebrow {
+  font-size: 11px;
+  color: #826a3e;
+}
+.reveal {
+  font-size: 13px;
+  min-height: 36px;
+}
+.field-error {
+  font-size: 12px;
+}
+.brand-caption {
+  font-size: 10px;
+  color: #64725b;
+}
+.signup-prompt {
+  font-size: 14px;
+  line-height: 1.7;
+  text-align: center;
+  color: #637359;
+  margin: 20px 0 0;
+}
+.signup-prompt a {
+  color: var(--forest);
+  font-weight: 650;
+  text-underline-offset: 4px;
+  margin-left: 4px;
+}
+.divider {
+  font-size: 12px;
+  margin-top: 24px;
+}
+.guest-help {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #66745b;
+  text-align: center;
+  margin: 13px 0;
+}
+.staff-preview {
+  display: block;
+  width: fit-content;
+  margin: 22px auto 0;
+  color: #566a49;
+  font-size: 12px;
+  text-underline-offset: 4px;
+}
+.access-context {
+  border: 1px solid #dedfc8;
+  background: #f5f3e5;
+  color: #75603d;
+  padding: 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+footer {
+  font-size: 12px;
+  color: #64745a;
+}
+footer a {
+  color: var(--forest);
+  text-decoration: none;
+}
+@media (max-width: 720px) {
+  app-auth-carousel {
+    display: none;
+  }
+  .form-panel {
+    padding: 22px 18px;
+  }
+  .form-content {
+    padding-top: 40px;
+  }
+  .login-shell {
+    margin: 12px;
+  }
+}

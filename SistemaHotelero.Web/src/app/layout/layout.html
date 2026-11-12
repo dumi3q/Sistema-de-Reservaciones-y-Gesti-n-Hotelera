@@ -1,0 +1,150 @@
+<div class="workspace" [class.staff-mode]="!publicMode()">
+  <aside class="sidebar">
+    <a [routerLink]="publicMode() ? '/visitar' : '/explorar/inicio'" class="brand"
+      ><span class="brand-mark">H</span><span>HotelHub<small>HOSPITALITY SUITE</small></span></a
+    >
+    <button
+      class="menu-toggle"
+      type="button"
+      aria-controls="workspace-nav"
+      [attr.aria-expanded]="menuOpen()"
+      (click)="menuOpen.set(!menuOpen())"
+    >
+      {{ menuOpen() ? 'Cerrar menú' : 'Menú' }}
+    </button>
+    <div class="workspace-label">
+      {{ publicMode() ? 'BIENVENIDO AL HOTEL' : 'DEMOSTRACIÓN DEL PERSONAL' }}
+    </div>
+    <p class="nav-label">{{ publicMode() ? 'DESCUBRE TU ESTANCIA' : 'ESPACIO DE TRABAJO' }}</p>
+    <nav
+      id="workspace-nav"
+      [class.open]="menuOpen()"
+      (click)="menuOpen.set(false)"
+      [attr.aria-label]="publicMode() ? 'Navegación del hotel' : 'Navegación de demostración'"
+    >
+      <a
+        [routerLink]="publicMode() ? '/visitar' : '/explorar/inicio'"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        [routerLinkActiveOptions]="{ exact: true }"
+        ><span aria-hidden="true">⌂</span>Inicio<span class="nav-arrow">↗</span></a
+      >
+      @if (publicMode()) {
+        <a routerLink="/visitar/habitaciones" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><span aria-hidden="true">▦</span>Habitaciones<span class="nav-arrow">↗</span></a
+        >
+        <a
+          routerLink="/visitar/mis-reservaciones"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+        >
+          <span aria-hidden="true">▤</span>Mis reservaciones<span class="nav-arrow">↗</span>
+        </a>
+        <a
+          routerLink="/visitar/servicio-habitacion"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+        >
+          <span aria-hidden="true">⌂</span>Servicio a la habitación<span class="nav-arrow">↗</span>
+        </a>
+        <a routerLink="/visitar/mi-perfil" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <span aria-hidden="true">♙</span>Mi perfil<span class="nav-arrow">↗</span>
+        </a>
+        <a
+          routerLink="/visitar/mis-solicitudes"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+        >
+          <span aria-hidden="true">✦</span>Mis solicitudes<span class="nav-arrow">↗</span>
+        </a>
+        <a routerLink="/visitar/mis-pedidos" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <span aria-hidden="true">♧</span>Mis pedidos<span class="nav-arrow">↗</span>
+        </a>
+      } @else {
+        <a
+          routerLink="/explorar/reservaciones"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+          [class.picker-active]="roomPickerActive()"
+          ><span aria-hidden="true">▤</span>Reservaciones<span class="nav-arrow">↗</span></a
+        >
+        <a routerLink="/explorar/reportes" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <span aria-hidden="true">▥</span>Reportes<span class="nav-arrow">↗</span>
+        </a>
+        <a
+          routerLink="/explorar/solicitudes"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+        >
+          <span aria-hidden="true">✦</span>Solicitudes<span class="nav-arrow">↗</span>
+        </a>
+        <a routerLink="/explorar/estadias" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><span aria-hidden="true">⌂</span>Estadías<span class="nav-arrow">↗</span></a
+        >
+        <a routerLink="/explorar/huespedes" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><span aria-hidden="true">♙</span>Huéspedes<span class="nav-arrow">↗</span></a
+        >
+        <a routerLink="/explorar/caja" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><span aria-hidden="true">$</span>Caja<span class="nav-arrow">↗</span></a
+        >
+      }
+      <a
+        [routerLink]="publicMode() ? '/visitar/restaurante' : '/explorar/restaurante'"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        ><span aria-hidden="true">♧</span>Restaurante<span class="nav-arrow">↗</span></a
+      >
+      @if (!publicMode()) {
+        <a
+          routerLink="/explorar/administracion"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+        >
+          <span aria-hidden="true">⚙</span>Administración<span class="nav-arrow">↗</span>
+        </a>
+      }
+      @if (!publicMode()) {
+        <a class="mobile-login" routerLink="/login">Volver al inicio de sesión</a>
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="avatar">{{ publicMode() ? 'HI' : 'VP' }}</span>
+      <div>
+        <strong>{{ publicMode() ? 'Hola, invitado' : 'Vista de prueba' }}</strong
+        ><small>{{ publicMode() ? 'Explora a tu ritmo' : 'Datos de demostración' }}</small>
+      </div>
+      <a routerLink="/login" [attr.aria-label]="publicMode() ? 'Iniciar sesión' : 'Volver al login'"
+        >↩</a
+      >
+    </div>
+  </aside>
+  <div class="workspace-body">
+    <header class="topbar">
+      <span
+        >HotelHub <span class="breadcrumb-divider">/</span>
+        {{ publicMode() ? 'Tu próxima estancia' : 'Operación del hotel' }}</span
+      >
+      <div class="topbar-actions">
+        <span class="demo-badge"
+          ><i></i>{{ publicMode() ? 'Visita pública · Demo' : 'Demostración del personal' }}</span
+        >
+        @if (publicMode()) {
+          <a routerLink="/login" class="sign-in-link">Iniciar sesión ↗</a>
+        } @else {
+          <a
+            routerLink="/explorar/mi-perfil"
+            class="sign-in-link"
+            routerLinkActive="active"
+            ariaCurrentWhenActive="page"
+            >Mi perfil</a
+          >
+        }
+      </div>
+    </header>
+    <main class="workspace-content"><router-outlet /></main>
+    <footer class="workspace-footer">
+      HOTELHUB <span>Una experiencia bien cuidada, desde el primer detalle.</span>
+    </footer>
+  </div>
+</div>

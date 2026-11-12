@@ -1,0 +1,58 @@
+<section class="page" aria-labelledby="settings-title">
+  <header class="page-heading">
+    <div>
+      <h1 id="settings-title">Configuración general</h1>
+      <p>Define los horarios del hotel y el anticipo que se muestra al reservar.</p>
+    </div>
+  </header>
+  <app-admin-nav />
+  <p class="demo-note-inline">
+    Los cambios se aplican en el resumen de reserva de la demo y se reinician al recargar.
+  </p>
+  <form class="reception-panel settings" [formGroup]="form" (ngSubmit)="save()">
+    <h2>Horarios y reservaciones</h2>
+    <div class="settings-fields">
+      <label class="field">Hora de check-in<input type="time" formControlName="checkIn" /></label>
+      <label class="field">Hora de check-out<input type="time" formControlName="checkOut" /></label>
+      <label class="field"
+        >Regla de anticipo
+        <select formControlName="depositMode">
+          <option value="Porcentaje">Porcentaje de la estadía</option>
+          <option value="PrimeraNoche">Primera noche</option>
+          <option value="SinAnticipo">Sin anticipo</option>
+        </select>
+      </label>
+      @if (form.controls.depositMode.value === 'Porcentaje') {
+        <label class="field"
+          >Anticipo (%)<input type="number" min="0" max="100" step="any" formControlName="deposit"
+        /></label>
+      }
+    </div>
+    <h2>Impuestos de referencia</h2>
+    <div class="settings-fields">
+      <label class="field"
+        >Hospedaje (%)<input
+          type="number"
+          min="0"
+          max="100"
+          step="any"
+          formControlName="lodgingTax"
+      /></label>
+      <label class="field"
+        >Restaurante (%)<input
+          type="number"
+          min="0"
+          max="100"
+          step="any"
+          formControlName="restaurantTax"
+      /></label>
+    </div>
+    <p>Valores de referencia. Los cobros simulados se calculan sobre el subtotal.</p>
+    <p>Zona horaria del hotel: Costa Rica · Moneda: USD</p>
+    <div class="settings-actions">
+      <button class="action primary" type="submit">Guardar configuración</button>
+      <button class="action secondary" type="button" (click)="reset()">Restaurar valores</button>
+    </div>
+    <p class="notice" role="status">{{ message() }}</p>
+  </form>
+</section>

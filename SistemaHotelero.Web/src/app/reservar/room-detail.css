@@ -1,0 +1,278 @@
+.room-detail {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+.photo-frame {
+  height: 210px;
+  position: relative;
+  background: linear-gradient(130deg, #e6dfc8, #b6c4ad);
+  overflow: hidden;
+}
+.photo-frame > img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  animation: image-in 0.3s ease;
+}
+.photo-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: #637459;
+  font-size: 50px;
+}
+.photo-fallback small {
+  font: 11px var(--font-ui);
+  margin-top: 8px;
+}
+.photo-label,
+.photo-count {
+  position: absolute;
+  color: white;
+  background: #253d2c88;
+  backdrop-filter: blur(6px);
+  font-size: 13px;
+  letter-spacing: 1px;
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+.photo-label {
+  left: 13px;
+  top: 13px;
+}
+.photo-count {
+  bottom: 13px;
+  right: 13px;
+  letter-spacing: 0;
+}
+.photo-tabs {
+  display: flex;
+  gap: 5px;
+  padding: 12px 18px 0;
+}
+.photo-tabs button {
+  width: 28px;
+  height: 24px;
+  border-radius: 4px;
+  background: #f5f6ef;
+  color: #5b6955;
+  font-size: 13px;
+  border: 1px solid var(--border);
+}
+.photo-tabs button.active {
+  background: var(--forest);
+  color: white;
+  border-color: var(--forest);
+}
+.detail-content {
+  padding: 18px;
+}
+.detail-location {
+  font-size: 13px;
+  color: #5b6955;
+  letter-spacing: 1px;
+}
+.detail-content h3 {
+  margin: 10px 0;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+}
+.detail-content h3 span {
+  display: block;
+  font-size: 13px;
+  color: #5b6955;
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+.detail-summary {
+  font-size: 13px;
+  color: #5b6955;
+  line-height: 1.8;
+}
+.room-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 0 17px;
+  border-bottom: 1px solid var(--border);
+  color: #5b6955;
+  font-size: 13px;
+}
+.room-facts span + span {
+  border-left: 1px solid var(--border);
+  padding-left: 10px;
+}
+.detail-content h4 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 19px 0 12px;
+}
+.amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.amenities span {
+  font-size: 13px;
+  color: #5b6955;
+  background: #f4f6ee;
+  border-radius: 4px;
+  padding: 6px 7px;
+}
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+  margin-top: 20px;
+}
+.price-row strong {
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: -0.8px;
+}
+.price-row span {
+  font-size: 13px;
+  color: #5b6955;
+}
+.estimate {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 13px;
+  font-size: 13px;
+  color: #5b6955;
+}
+.estimate b {
+  font-weight: 550;
+  color: var(--ink);
+}
+.price-note {
+  font-size: 13px;
+  color: #5b6955;
+  line-height: 1.8;
+  margin-bottom: 17px;
+}
+.reserve-button {
+  width: 100%;
+}
+.reserve-button span {
+  margin-left: auto;
+}
+.detail-empty {
+  min-height: 365px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 35px 30px;
+  background: radial-gradient(ellipse at top, #f4f3e7, transparent 65%);
+}
+.detail-empty > span {
+  display: grid;
+  place-items: center;
+  width: 65px;
+  height: 65px;
+  border: 1px solid #e1e4d1;
+  border-radius: 50%;
+  color: #5b6955;
+  font-size: 37px;
+  margin-bottom: 27px;
+}
+.detail-empty .eyebrow {
+  font-size: 13px;
+}
+.detail-empty h3 {
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: -0.7px;
+  margin: 0 0 15px;
+}
+.detail-empty > p:not(.eyebrow) {
+  font-size: 13px;
+  color: #5b6955;
+  line-height: 1.9;
+  max-width: 250px;
+}
+.empty-line {
+  width: 35px;
+  height: 1px;
+  background: #c6b58c;
+  margin: 18px;
+}
+.detail-empty small {
+  font-size: 13px;
+  color: #5b6955;
+  line-height: 1.8;
+}
+@keyframes image-in {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.detail-content {
+  padding: 23px;
+}
+.detail-summary {
+  font-size: 15px;
+}
+.detail-content h3 {
+  font-size: 25px;
+}
+.detail-content h4 {
+  font-size: 16px;
+}
+.photo-tabs button {
+  width: 44px;
+  height: 40px;
+}
+.price-row,
+.estimate {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.room-facts {
+  gap: 12px;
+  line-height: 1.6;
+}
+.amenities span {
+  padding: 8px 10px;
+}
+.price-note {
+  font-size: 13px;
+}
+
+.room-more {
+  margin-top: 12px;
+}
+
+.room-more summary {
+  min-height: 44px;
+  padding-block: 10px;
+  color: var(--forest);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-more .photo-tabs {
+  padding-inline: 0;
+}
+
+.room-more .photo-tabs button {
+  width: 44px;
+  height: 44px;
+}

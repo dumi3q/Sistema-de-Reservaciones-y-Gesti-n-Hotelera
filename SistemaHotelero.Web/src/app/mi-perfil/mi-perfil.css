@@ -1,0 +1,12 @@
+.profile-form {
+  display: grid;
+  gap: 12px;
+  max-width: 580px;
+  padding: 16px;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

@@ -1,0 +1,69 @@
+<section class="page" aria-labelledby="edit-title">
+  <header class="page-heading">
+    <div>
+      <h1 id="edit-title">Editar reservación</h1>
+      <p>{{ id }} · {{ reservation()?.guest }}</p>
+    </div>
+    <a class="action secondary" routerLink="/explorar/reservaciones" [queryParams]="{ buscar: id }"
+      >Volver a reservaciones</a
+    >
+  </header>
+  <p class="demo-note-inline">
+    Cambios de prueba. Se comprueba la disponibilidad antes de guardar.
+  </p>
+  @if (editable()) {
+    <form class="reception-panel form-fields" (submit)="$event.preventDefault(); save()">
+      <div class="number-fields">
+        <label class="field"
+          >Entrada<input
+            #entry
+            type="date"
+            required
+            [value]="start()"
+            (input)="start.set(entry.value)"
+        /></label>
+        <label class="field"
+          >Salida<input #exit type="date" required [value]="end()" (input)="end.set(exit.value)"
+        /></label>
+      </div>
+      <label class="field"
+        >Adultos<input
+          #count
+          type="number"
+          required
+          min="1"
+          max="4"
+          [value]="guests()"
+          (input)="guests.set(count.valueAsNumber)"
+      /></label>
+      <label class="field"
+        >Habitación disponible
+        <select #room required (change)="roomId.set(room.value)">
+          <option value="" [selected]="price() === null">Elige una habitación disponible</option>
+          @for (item of available(); track item.id) {
+            <option [value]="item.id" [selected]="roomId() === item.id">
+              {{ item.id }} · {{ item.type }}
+            </option>
+          }
+        </select>
+      </label>
+      @if (price(); as nightly) {
+        <p>
+          {{ nightly | currency: 'USD' }} por noche · Subtotal estimado
+          <strong>{{ total() | currency: 'USD' }}</strong>
+        </p>
+      } @else {
+        <p>Elige fechas válidas y una habitación para ver el subtotal.</p>
+      }
+      <button class="action primary" type="submit" [disabled]="price() === null">
+        Guardar cambios
+      </button>
+      <p class="notice" role="status">{{ message() }}</p>
+      @if (error()) {
+        <p class="form-error" role="alert">{{ error() }}</p>
+      }
+    </form>
+  } @else {
+    <p class="empty">Solo puedes editar una reserva pendiente o confirmada.</p>
+  }
+</section>

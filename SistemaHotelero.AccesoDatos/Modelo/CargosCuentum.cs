@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SistemaHotelero.AccesoDatos.Modelo;
@@ -6,6 +6,10 @@ namespace SistemaHotelero.AccesoDatos.Modelo;
 public partial class CargosCuentum
 {
     public int Id { get; set; }
+
+    public int? TipoPenalizacionId { get; set; }
+
+    public virtual TipoPenalizacion? TipoPenalizacion { get; set; }
 
     public int CuentaId { get; set; }
 

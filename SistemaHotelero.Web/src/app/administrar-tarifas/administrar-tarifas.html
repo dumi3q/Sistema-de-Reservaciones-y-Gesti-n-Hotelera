@@ -1,0 +1,126 @@
+<section class="page" aria-labelledby="tariff-title">
+  <header class="page-heading">
+    <div>
+      <h1 id="tariff-title">Tipos y reglas de tarifa</h1>
+      <p>Actualiza los tipos de habitación y programa ajustes a la tarifa base.</p>
+    </div>
+  </header>
+  <app-admin-nav />
+  <p class="demo-note-inline">
+    Configuración de prueba. La regla activa más reciente que coincida con la fecha de entrada se
+    aplica a toda la estadía nueva.
+  </p>
+  <div class="tariff-grid">
+    <form class="reception-panel form-fields" (submit)="$event.preventDefault(); saveType()">
+      <h2>Tipos de habitación</h2>
+      <label class="field"
+        >Tipo
+        <select #type [value]="selected()" (change)="chooseType(type.value)">
+          <option value="">Selecciona un tipo</option>
+          @for (item of types(); track item) {
+            <option [value]="item">{{ item }}</option>
+          }
+        </select>
+      </label>
+      @if (selected()) {
+        <label class="field"
+          >Nombre<input
+            #nameInput
+            required
+            maxlength="60"
+            [value]="name()"
+            (input)="name.set(nameInput.value)"
+        /></label>
+        <label class="field"
+          >Capacidad de adultos<input
+            #capacityInput
+            type="number"
+            required
+            min="1"
+            max="4"
+            [value]="capacity()"
+            (input)="capacity.set(capacityInput.valueAsNumber)"
+        /></label>
+        <button class="action primary" type="submit">Guardar tipo</button>
+      }
+    </form>
+    <form class="reception-panel form-fields" (submit)="$event.preventDefault(); saveRule()">
+      <h2>{{ rule().id ? 'Editar regla' : 'Nueva regla' }}</h2>
+      <label class="field"
+        >Nombre<input
+          #label
+          required
+          maxlength="60"
+          [value]="rule().label"
+          (input)="patchRule({ label: label.value })"
+      /></label>
+      <label class="field"
+        >Aplica a
+        <select #scope [value]="rule().type" (change)="patchRule({ type: scope.value })">
+          <option value="">Todos los tipos</option>
+          @for (item of types(); track item) {
+            <option [value]="item">{{ item }}</option>
+          }
+        </select>
+      </label>
+      <div class="number-fields">
+        <label class="field"
+          >Desde<input
+            #start
+            type="date"
+            required
+            [value]="rule().start"
+            (input)="patchRule({ start: start.value })"
+        /></label>
+        <label class="field"
+          >Hasta (sin incluir)<input
+            #end
+            type="date"
+            required
+            [value]="rule().end"
+            (input)="patchRule({ end: end.value })"
+        /></label>
+      </div>
+      <label class="field"
+        >Ajuste (%)<input
+          #adjust
+          type="number"
+          required
+          min="-90"
+          max="300"
+          [value]="rule().adjustment"
+          (input)="patchRule({ adjustment: adjust.valueAsNumber })"
+      /></label>
+      <label class="check"
+        ><input
+          #enabled
+          type="checkbox"
+          [checked]="rule().active"
+          (change)="patchRule({ active: enabled.checked })"
+        />
+        Regla activa</label
+      >
+      <button class="action primary" type="submit">Guardar regla</button>
+    </form>
+  </div>
+  <p class="notice" role="status">{{ message() }}</p>
+  @if (error()) {
+    <p class="form-error" role="alert">{{ error() }}</p>
+  }
+  <section class="reception-panel" aria-label="Reglas guardadas">
+    @for (item of hotel.tariffs(); track item.id) {
+      <article class="record tariff-row">
+        <div>
+          <strong>{{ item.label }}</strong
+          ><small>{{ item.type || 'Todos los tipos' }} · {{ item.start }} a {{ item.end }}</small>
+        </div>
+        <span>{{ item.adjustment }} % · {{ item.active ? 'Activa' : 'Inactiva' }}</span>
+        <button class="action secondary" type="button" (click)="rule.set({ ...item })">
+          Editar regla
+        </button>
+      </article>
+    } @empty {
+      <p class="empty">Todavía no hay reglas. Usa el formulario para programar un ajuste.</p>
+    }
+  </section>
+</section>

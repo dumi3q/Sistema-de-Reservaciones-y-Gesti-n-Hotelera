@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SistemaHotelero.AccesoDatos.Modelo;
@@ -7,21 +7,7 @@ public partial class Cliente
 {
     public int Id { get; set; }
 
-    public byte TipoDocumento { get; set; }
-
-    public string NumeroDocumento { get; set; } = null!;
-
-    public string Nombres { get; set; } = null!;
-
-    public string Apellidos { get; set; } = null!;
-
-    public string Nacionalidad { get; set; } = null!;
-
-    public DateOnly FechaNacimiento { get; set; }
-
-    public string Email { get; set; } = null!;
-
-    public string Telefono { get; set; } = null!;
+    public int PersonaId { get; set; }
 
     public string? Preferencias { get; set; }
 
@@ -41,5 +27,5 @@ public partial class Cliente
 
     public virtual ICollection<ReservacionesMesa> ReservacionesMesas { get; set; } = new List<ReservacionesMesa>();
 
-    public virtual Usuario? Usuario { get; set; }
+    public virtual Persona Persona { get; set; } = null!;
 }

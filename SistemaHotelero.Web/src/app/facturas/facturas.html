@@ -1,0 +1,81 @@
+<section class="page" aria-labelledby="invoice-title">
+  <header class="page-heading">
+    <div>
+      <h1 id="invoice-title">{{ id() ? 'Detalle de factura' : 'Mis facturas' }}</h1>
+    </div>
+    @if (id()) {
+      <a
+        class="action secondary no-print"
+        [routerLink]="staff ? '/explorar/caja' : '/visitar/mis-facturas'"
+        >Volver</a
+      >
+    }
+  </header>
+  <p class="demo-note-inline">Documentos internos de prueba. Sin validez fiscal.</p>
+  @if (receipt(); as item) {
+    <article class="reception-panel invoice">
+      <h2>Comprobante {{ item.id }}</h2>
+      <p>{{ item.date | date: 'dd/MM/yyyy' : 'UTC' }} · {{ item.account.title }}</p>
+      <p>
+        Receptor <strong>{{ item.account.guest }}</strong>
+      </p>
+      <div class="invoice-lines">
+        @for (line of item.account.charges; track $index) {
+          <p>
+            <span>{{ line.quantity }} × {{ line.label }}</span
+            ><strong>{{ (line.quantity * line.unitCents) / 100 | currency: 'USD' }}</strong>
+          </p>
+        }
+      </div>
+      <dl>
+        <div>
+          <dt>Subtotal</dt>
+          <dd>{{ item.totalCents / 100 | currency: 'USD' }}</dd>
+        </div>
+        <div>
+          <dt>Descuentos aplicados</dt>
+          <dd>{{ 0 | currency: 'USD' }}</dd>
+        </div>
+        <div>
+          <dt>Impuestos aplicados</dt>
+          <dd>{{ 0 | currency: 'USD' }}</dd>
+        </div>
+        <div>
+          <dt>Pagado · {{ item.method }}</dt>
+          <dd>{{ item.totalCents / 100 | currency: 'USD' }}</dd>
+        </div>
+        <div>
+          <dt>Saldo pendiente</dt>
+          <dd>{{ 0 | currency: 'USD' }}</dd>
+        </div>
+      </dl>
+      <button class="action primary no-print" type="button" (click)="print()">
+        Imprimir comprobante
+      </button>
+    </article>
+  } @else if (id()) {
+    <p class="empty">El comprobante no está disponible en esta sesión.</p>
+  } @else {
+    <section class="reception-panel">
+      @for (item of receipts(); track item.id) {
+        <article class="record invoice-row">
+          <div>
+            <strong>{{ item.id }}</strong
+            ><small>{{ item.account.title }} · {{ item.date | date: 'dd/MM/yyyy' : 'UTC' }}</small>
+          </div>
+          <strong>{{ item.totalCents / 100 | currency: 'USD' }}</strong>
+          <a class="action secondary" [routerLink]="['/visitar/mis-facturas', item.id]"
+            >Ver detalle</a
+          >
+        </article>
+      } @empty {
+        <p class="empty">
+          Tus comprobantes aparecerán aquí cuando Caja registre el pago de una estadía.
+        </p>
+        <a class="action secondary empty-link" routerLink="/visitar/mis-reservaciones"
+          >Ver mis reservaciones</a
+        >
+      }
+    </section>
+  }
+</section>

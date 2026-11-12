@@ -1,0 +1,213 @@
+<section class="page dashboard" aria-labelledby="dashboard-title" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">CADA GRAN ESTANCIA EMPIEZA CON UN BUEN DÍA</p>
+      <h1 id="dashboard-title">Panel del personal</h1>
+      <p>Lo importante, a la vista. Cuida cada llegada y cada detalle.</p>
+    </div>
+    <button class="date-button" (click)="resetDate()">
+      {{ day() | date: 'dd/MM/yyyy' : 'UTC' }} <small>Fecha de ejemplo ↺</small>
+    </button>
+  </header>
+  <p class="demo-note-inline">
+    ✧ Panel del personal con datos simulados. Las cifras cambian al seleccionar un día del
+    calendario.
+  </p>
+  @if (error()) {
+    <p class="error-message" role="alert">{{ error() }}</p>
+  }
+  <div class="metrics-grid">
+    <article class="metric-card">
+      <span>Ocupación</span>
+      @if (loading()) {
+        <app-skeleton [height]="40" />
+      } @else {
+        <strong>{{ availability().rate | percent: '1.0-0' }}</strong>
+      }
+      <small
+        >{{ availability().occupied }} de
+        {{ hotel.rooms.length - availability().maintenance }} habitaciones operativas</small
+      ><span class="metric-icon">▦</span>
+    </article>
+    <article class="metric-card">
+      <span>Huéspedes alojados</span>
+      @if (loading()) {
+        <app-skeleton [height]="40" />
+      } @else {
+        <strong>{{ availability().guests }}</strong>
+      }
+      <small>Personas en estadías de ejemplo</small><span class="metric-icon">♧</span>
+    </article>
+    <article class="metric-card">
+      <span>Llegadas del día</span>
+      @if (loading()) {
+        <app-skeleton [height]="40" />
+      } @else {
+        <strong>{{ count('Llegada') }}</strong>
+      }
+      <small>Bienvenidas por preparar</small><span class="metric-icon">↙</span>
+    </article>
+    <article class="metric-card">
+      <span>Salidas del día</span>
+      @if (loading()) {
+        <app-skeleton [height]="40" />
+      } @else {
+        <strong>{{ count('Salida') }}</strong>
+      }
+      <small>Despedidas por acompañar</small><span class="metric-icon">↗</span>
+    </article>
+  </div>
+  <div class="dashboard-grid">
+    <div class="dashboard-main">
+      <article class="panel movements">
+        <header class="panel-heading">
+          <div>
+            <p class="eyebrow">LA AGENDA DE TU HOTEL</p>
+            <h2>Personas que llegan, historias que empiezan.</h2>
+          </div>
+          <a
+            routerLink="/explorar/estadias"
+            [queryParams]="{
+              fecha: day(),
+              vista: selectedKind() === 'Salida' ? 'salidas' : 'llegadas',
+            }"
+            >Gestionar estadías ↗</a
+          >
+        </header>
+        <div class="movement-tabs">
+          <button
+            [class.active]="selectedKind() === 'Llegada'"
+            [attr.aria-pressed]="selectedKind() === 'Llegada'"
+            (click)="selectedKind.set('Llegada')"
+          >
+            Llegadas <b>{{ count('Llegada') }}</b></button
+          ><button
+            [class.active]="selectedKind() === 'Salida'"
+            [attr.aria-pressed]="selectedKind() === 'Salida'"
+            (click)="selectedKind.set('Salida')"
+          >
+            Salidas <b>{{ count('Salida') }}</b></button
+          ><span>{{ day() | date: 'dd/MM' : 'UTC' }}</span>
+        </div>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Agenda del día">
+          @if (loading()) {
+            @for (row of [1, 2, 3, 4]; track row) {
+              <app-skeleton [height]="50" />
+            }
+          } @else {
+            <table>
+              <thead>
+                <tr>
+                  <th>Huésped</th>
+                  <th>Habitación</th>
+                  <th>Personas</th>
+                  <th>Hora</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (event of visibleEvents(); track event.id) {
+                  <tr>
+                    <td>
+                      <span class="guest-initial">{{ event.guest.charAt(0) }}</span
+                      >{{ event.guest }}
+                    </td>
+                    <td>{{ event.room }}</td>
+                    <td>{{ event.people }}</td>
+                    <td>
+                      <span class="time-pill">{{ event.time }}</span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="4" class="empty-events">
+                      No hay {{ selectedKind() === 'Llegada' ? 'llegadas' : 'salidas' }} de ejemplo
+                      para este día.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      </article>
+      <article class="panel inventory">
+        <header class="panel-heading">
+          <div>
+            <p class="eyebrow">ESPACIO PARA NUEVAS EXPERIENCIAS</p>
+            <h2>Disponibilidad del hotel</h2>
+          </div>
+          <a routerLink="/explorar/reservar">Ver habitaciones ↗</a>
+        </header>
+        <div class="inventory-bar" aria-hidden="true">
+          <span class="occupied" [style.flex]="availability().occupied"></span
+          ><span class="reserved" [style.flex]="availability().reserved"></span
+          ><span class="available" [style.flex]="availability().available"></span
+          ><span class="maintenance" [style.flex]="availability().maintenance"></span>
+        </div>
+        <div class="inventory-legend">
+          <span><i class="occupied"></i>{{ availability().occupied }} ocupadas</span
+          ><span><i class="reserved"></i>{{ availability().reserved }} reservadas</span
+          ><span><i class="available"></i>{{ availability().available }} disponibles</span
+          ><span><i class="maintenance"></i>{{ availability().maintenance }} mantenimiento</span>
+        </div>
+        <div class="building-summary">
+          @for (building of hotel.buildings; track building.code) {
+            <a routerLink="/explorar/reservar"
+              ><span>Edificio {{ building.code }}</span
+              ><strong
+                >{{ availableInBuilding(building.code) }}<small> / 24 disponibles</small></strong
+              ></a
+            >
+          }
+        </div>
+      </article>
+    </div>
+    <aside class="dashboard-aside">
+      <article class="panel calendar" aria-label="Calendario de llegadas y salidas">
+        <header>
+          <button aria-label="Mes anterior" (click)="shiftMonth(-1)">‹</button>
+          <h2>{{ monthLabel() }}</h2>
+          <button aria-label="Mes siguiente" (click)="shiftMonth(1)">›</button>
+        </header>
+        <div class="weekdays">
+          @for (name of weekdayNames; track $index) {
+            <span>{{ name }}</span>
+          }
+        </div>
+        <div class="calendar-grid">
+          @for (cell of calendarDays(); track cell.key) {
+            <button
+              [class.other-month]="!cell.inMonth"
+              [class.selected]="day() === cell.key"
+              [class.has-events]="cell.hasEvents"
+              [attr.aria-pressed]="day() === cell.key"
+              [attr.aria-label]="cell.key + (cell.hasEvents ? ', con movimientos' : '')"
+              (click)="selectDay(cell.key)"
+            >
+              {{ cell.number }}
+            </button>
+          }
+        </div>
+        <p class="calendar-key"><i></i> Día con llegadas o salidas</p>
+        <button class="reset-date" (click)="resetDate()">Volver a la fecha de ejemplo</button>
+      </article>
+      <article class="panel daily-notes">
+        <p class="eyebrow">PEQUEÑAS COSAS QUE IMPORTAN</p>
+        <h2>Para tener en cuenta</h2>
+        <a routerLink="/explorar/restaurante"
+          ><span class="note-icon">♧</span
+          ><span
+            ><strong>El salón está en movimiento</strong
+            ><small>Consulta las mesas y la atención pendiente.</small></span
+          ><b>↗</b></a
+        ><a routerLink="/explorar/reservar"
+          ><span class="note-icon">⌂</span
+          ><span
+            ><strong>{{ availability().maintenance }} habitaciones en mantenimiento</strong
+            ><small>No se incluyen en la ocupación operativa.</small></span
+          ><b>↗</b></a
+        >
+      </article>
+    </aside>
+  </div>
+</section>

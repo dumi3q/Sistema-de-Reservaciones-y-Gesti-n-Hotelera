@@ -1,0 +1,184 @@
+:host {
+  display: block;
+  height: 100%;
+  min-width: 0;
+}
+.visual-panel {
+  min-height: 100%;
+  height: 100%;
+  padding: 28px;
+}
+.hotel-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: photo-appear 0.7s ease both;
+}
+.photo-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #112c2440 0%, #142e2310 35%, #142e23bd 65%, #102b20f5 100%);
+}
+.visual-top {
+  z-index: 1;
+  gap: 10px;
+}
+.pill {
+  font-size: 10px;
+  background: #17392b50;
+  border-color: #ffffff45;
+  backdrop-filter: blur(8px);
+}
+.edition {
+  font-size: 10px;
+  color: #e2eadb;
+}
+.slide-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
+  min-height: 580px;
+}
+.photo-space {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 360px;
+  gap: 14px;
+}
+.photo-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  letter-spacing: 5px;
+  color: #fff7e6;
+  text-shadow: 0 2px 15px #132c1e;
+}
+.photo-brand b {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 80px;
+  border: 1px solid #efe0b8c0;
+  border-radius: 12px;
+  background: #233c2f80;
+  backdrop-filter: blur(8px);
+  color: #f4e4b8;
+  font:
+    58px Georgia,
+    serif;
+  letter-spacing: 0;
+}
+.photo-caption {
+  font-size: 9px;
+  letter-spacing: 1.6px;
+  color: #f4f1e7;
+  background: #243a2e70;
+  padding: 5px 9px;
+  border-radius: 4px;
+}
+.visual-copy {
+  padding-top: 25px;
+  margin: 0 5px 28px;
+}
+.visual-copy .eyebrow {
+  color: #e3d2a8;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.visual-copy h2 {
+  font-size: 30px;
+  line-height: 1.35;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+.visual-copy > p:last-child {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #e0e8d8;
+}
+.visual-bottom {
+  justify-content: space-between;
+  gap: 12px;
+  z-index: 1;
+}
+.slide-controls {
+  display: flex;
+  gap: 6px;
+}
+.slide-controls button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 12px 0;
+  width: 58px;
+}
+.slide-controls span {
+  display: block;
+  background: #ced9c550;
+  height: 4px;
+  border-radius: 5px;
+}
+.slide-controls .slide-active span {
+  background: #eddbab;
+}
+.pause-control {
+  background: #ffffff16;
+  border: 1px solid #ffffff45;
+  color: #fff6de;
+  border-radius: 6px;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  font-size: 15px;
+}
+button:focus-visible {
+  outline: 2px solid #f0d896;
+  outline-offset: 4px;
+}
+@keyframes photo-appear {
+  from {
+    opacity: 0.3;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-width: 1050px) {
+  .visual-panel {
+    padding: 22px;
+  }
+  .visual-copy h2 {
+    font-size: 26px;
+  }
+  .edition {
+    display: none;
+  }
+  .slide-content {
+    min-height: 580px;
+  }
+  .mini-dashboard {
+    width: 96%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* The active indicator fills only the inner bar, not the whole button. */
+.slide-controls button.slide-active {
+  width: 58px;
+  background: transparent;
+}

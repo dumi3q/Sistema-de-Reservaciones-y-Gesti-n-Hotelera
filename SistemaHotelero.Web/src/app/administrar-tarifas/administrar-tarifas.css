@@ -1,0 +1,26 @@
+.tariff-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.tariff-grid form {
+  padding: 15px;
+}
+
+.tariff-grid h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.tariff-row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+@media (max-width: 650px) {
+  .tariff-grid,
+  .tariff-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

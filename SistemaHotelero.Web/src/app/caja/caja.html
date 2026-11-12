@@ -1,0 +1,244 @@
+<section class="page" aria-labelledby="cash-title" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">OPERACIÓN DEL HOTEL</p>
+      <h1 id="cash-title">Caja</h1>
+      <p>Consulta cargos, registra cobros y revisa comprobantes.</p>
+    </div>
+    <a class="action secondary" routerLink="/explorar/estadias">Ver estadías</a>
+  </header>
+  <p class="demo-note-inline">
+    Importes de prueba en USD. Los comprobantes son internos y los cambios se reinician al recargar.
+  </p>
+  <div class="cash-tabs" role="group" aria-label="Vista de Caja">
+    <button
+      class="action"
+      [class.primary]="tab() === 'cuentas'"
+      [class.secondary]="tab() !== 'cuentas'"
+      type="button"
+      [attr.aria-pressed]="tab() === 'cuentas'"
+      (click)="setTab('cuentas')"
+    >
+      Cuentas
+      @if (!loading()) {
+        ({{ accounts().length }})
+      }
+    </button>
+    <button
+      class="action"
+      [class.primary]="tab() === 'comprobantes'"
+      [class.secondary]="tab() !== 'comprobantes'"
+      type="button"
+      [attr.aria-pressed]="tab() === 'comprobantes'"
+      (click)="setTab('comprobantes')"
+    >
+      Comprobantes
+      @if (!loading()) {
+        ({{ receipts().length }})
+      }
+    </button>
+  </div>
+  <p class="notice operation-message" role="status">{{ message() }}</p>
+
+  <div class="work-grid">
+    <section class="reception-panel work-pane" aria-label="Listado de Caja">
+      <div class="work-heading">
+        @if (tab() === 'cuentas') {
+          <label class="field"
+            >Buscar cuenta
+            <input
+              #search
+              type="search"
+              placeholder="Mesa, habitación o huésped"
+              [value]="query()"
+              (input)="query.set(search.value)"
+            />
+          </label>
+        } @else {
+          <h2>Comprobantes emitidos</h2>
+        }
+      </div>
+      <div class="work-scroll" tabindex="0" role="region" aria-label="Resultados de Caja">
+        @if (loading()) {
+          <div class="loading-rows" role="status" aria-label="Cargando cuentas">
+            @for (row of [1, 2, 3, 4]; track row) {
+              <app-skeleton [height]="48" />
+            }
+          </div>
+        } @else if (tab() === 'cuentas') {
+          @for (account of filtered(); track account.id) {
+            <button
+              class="work-choice"
+              type="button"
+              [attr.aria-pressed]="selectedId() === account.id"
+              (click)="
+                selectedId.set(account.id); accountDetail.scrollIntoView({ block: 'nearest' })
+              "
+            >
+              <span
+                ><strong>{{ account.title }}</strong
+                ><small>{{ account.guest }}</small></span
+              >
+              <strong>{{ totalCents(account.charges) / 100 | currency: 'USD' }}</strong>
+            </button>
+          } @empty {
+            <p class="empty">
+              {{
+                query() ? 'No encontramos cuentas con esa búsqueda.' : 'No hay cuentas abiertas.'
+              }}
+            </p>
+          }
+        } @else {
+          @for (item of receipts(); track item.id) {
+            <button
+              class="work-choice"
+              type="button"
+              [attr.aria-pressed]="receipt()?.id === item.id"
+              (click)="receipt.set(item); accountDetail.scrollIntoView({ block: 'nearest' })"
+            >
+              <span
+                ><strong>{{ item.id }}</strong
+                ><small>{{ item.account.title }}</small></span
+              >
+              <strong>{{ item.totalCents / 100 | currency: 'USD' }}</strong>
+            </button>
+          } @empty {
+            <p class="empty">Todavía no hay comprobantes registrados.</p>
+          }
+        }
+      </div>
+    </section>
+    <section #accountDetail class="reception-panel work-pane" aria-label="Detalle de Caja">
+      @if (loading()) {
+        <div class="loading-rows">
+          <app-skeleton [height]="52" /><app-skeleton [height]="90" /><app-skeleton [height]="90" />
+        </div>
+      } @else if (tab() === 'cuentas' && selected(); as account) {
+        <div class="work-heading detail-head">
+          <div>
+            <h2>{{ account.title }}</h2>
+            <small>{{ account.guest }} · {{ account.type }}</small>
+          </div>
+          <span class="badge" [attr.data-status]="account.payable ? 'Por cobrar' : 'Alojado'">{{
+            account.payable ? 'Por cobrar' : 'Estadía activa'
+          }}</span>
+        </div>
+        <ng-container
+          [ngTemplateOutlet]="chargeList"
+          [ngTemplateOutletContext]="{ $implicit: account.charges }"
+        />
+        <div class="work-footer">
+          <p class="work-total">
+            Saldo <strong>{{ totalCents(account.charges) / 100 | currency: 'USD' }}</strong>
+          </p>
+          @if (account.payable) {
+            <div class="cash-actions">
+              @if (account.type === 'Restaurante') {
+                <button
+                  class="action secondary"
+                  type="button"
+                  [disabled]="!activeStays().length"
+                  (click)="open(account, 'cargo')"
+                >
+                  Cargar a habitación
+                </button>
+              }
+              <button class="action primary" type="button" (click)="open(account, 'pago')">
+                Registrar pago
+              </button>
+            </div>
+          } @else {
+            <small>El saldo se puede cobrar al finalizar la estadía.</small>
+          }
+        </div>
+      } @else if (tab() === 'comprobantes' && receipt(); as item) {
+        <div class="work-heading detail-head">
+          <div>
+            <h2>Comprobante {{ item.id }}</h2>
+            <small>{{ item.account.title }} · {{ item.account.guest }} · {{ item.method }}</small>
+          </div>
+          <span class="badge" data-status="Alojado">Pagado</span>
+        </div>
+        <ng-container
+          [ngTemplateOutlet]="chargeList"
+          [ngTemplateOutletContext]="{ $implicit: item.account.charges }"
+        />
+        <div class="work-footer">
+          <p class="work-total">
+            Total pagado <strong>{{ item.totalCents / 100 | currency: 'USD' }}</strong>
+          </p>
+          <a class="action secondary" [routerLink]="['/explorar/caja/factura', item.id]"
+            >Ver factura</a
+          >
+        </div>
+      } @else {
+        <p class="empty">
+          {{
+            tab() === 'cuentas'
+              ? 'Selecciona una cuenta para ver sus cargos.'
+              : 'Selecciona un comprobante para ver el pago.'
+          }}
+        </p>
+      }
+    </section>
+  </div>
+</section>
+
+<ng-template #chargeList let-charges>
+  <div class="work-scroll" tabindex="0" role="region" aria-label="Cargos">
+    @for (item of charges; track $index) {
+      <div class="line-item">
+        <div>
+          <strong>{{ item.label }}</strong
+          ><small>{{ item.quantity }} × {{ item.unitCents / 100 | currency: 'USD' }}</small>
+        </div>
+        <strong>{{ (item.quantity * item.unitCents) / 100 | currency: 'USD' }}</strong>
+      </div>
+    }
+  </div>
+</ng-template>
+
+<dialog #paymentDialog aria-labelledby="payment-title" (close)="pending.set(null)">
+  @if (pending(); as account) {
+    <h2 id="payment-title">
+      {{ operation() === 'pago' ? 'Confirmar pago de prueba' : 'Cargar a habitación' }}
+    </h2>
+    <p>
+      {{ account.title }} ·
+      <strong>{{ totalCents(account.charges) / 100 | currency: 'USD' }}</strong>
+    </p>
+    @if (operation() === 'pago') {
+      <label class="field"
+        >Método de pago
+        <select #methodSelect [value]="method()" (change)="selectMethod(methodSelect.value)">
+          @for (option of modes; track option) {
+            <option [value]="option">{{ option }}</option>
+          }
+        </select>
+      </label>
+    } @else {
+      <label class="field"
+        >Estadía activa
+        <select #staySelect [value]="stayId()" (change)="stayId.set(staySelect.value)">
+          <option value="">Selecciona habitación y huésped</option>
+          @for (stay of activeStays(); track stay.id) {
+            <option [value]="stay.id">{{ stay.roomId }} · {{ stay.guest }}</option>
+          }
+        </select>
+      </label>
+    }
+    <div class="cash-actions dialog-actions">
+      <button class="action secondary" type="button" autofocus (click)="paymentDialog.close()">
+        Volver
+      </button>
+      <button
+        class="action primary"
+        type="button"
+        [disabled]="operation() === 'cargo' && !stayId()"
+        (click)="confirm()"
+      >
+        Confirmar {{ operation() }}
+      </button>
+    </div>
+  }
+</dialog>

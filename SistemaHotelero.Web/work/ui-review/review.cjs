@@ -1,0 +1,43 @@
+const { chromium } = require('C:/Users/evans/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+(async()=>{
+ const browser=await chromium.launch({headless:true,channel:"msedge"});
+ const page=await browser.newPage({viewport:{width:1440,height:1080},deviceScaleFactor:1});
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto('http://127.0.0.1:64861/login');
+ await page.getByRole('button',{name:'Explorar vista previa'}).click();
+ await page.waitForURL('**/explorar/reservar');
+ await page.locator('.building-card').first().waitFor();
+ await page.locator('.room-card').first().click();
+ await page.waitForTimeout(1400);
+ await page.screenshot({path:'work/ui-review/reservar-desktop.png',fullPage:true});
+ if(await page.locator('.building-card').count()!==4)throw Error('Missing buildings');
+ if(await page.locator('.floor-button').count()!==6)throw Error('Missing floors');
+ await page.locator('.building-card').nth(2).click();
+ await page.locator('.room-detail .detail-empty').waitFor();
+ await page.locator('.floor-button').nth(5).click();
+ await page.locator('.room-card').last().click();
+ await page.getByRole('button',{name:'Elegir esta habitación'}).click();
+ await page.locator('.success-message').waitFor();
+ await page.getByRole('link',{name:'Restaurante'}).click();
+ await page.locator('.table-tile').first().waitFor();
+ if(await page.locator('.table-tile').count()!==8)throw Error('Missing restaurant tables');
+ await page.screenshot({path:'work/ui-review/restaurante-desktop.png',fullPage:true});
+ await page.getByRole('button',{name:'Simular toma de orden'}).click();
+ await page.locator('.success-message').waitFor();
+ await page.getByRole('button',{name:'Piscina',exact:true}).click();
+ await page.waitForFunction(()=>document.querySelectorAll('.table-tile').length===2);
+ await page.setViewportSize({width:390,height:844});
+ await page.getByRole('button',{name:'Todas las áreas',exact:true}).click();
+ await page.screenshot({path:'work/ui-review/restaurante-mobile.png',fullPage:true});
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
+ await page.getByRole('link',{name:'Reservar habitación'}).click();
+ await page.locator('.room-card').first().waitFor();
+ await page.locator('.room-card').first().click();
+ await page.screenshot({path:'work/ui-review/reservar-mobile.png',fullPage:true});
+ const roomOverflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
+ console.log(JSON.stringify({errors,restaurantOverflow:overflow,reservationOverflow:roomOverflow,photosLoaded:await page.locator('.photo-frame img').evaluateAll(imgs=>imgs.every(img=>img.complete&&img.naturalWidth>0))}));
+ await browser.close();
+ if(errors.length||overflow||roomOverflow)process.exitCode=1;
+})().catch(e=>{console.error(e);process.exit(1)});
+
+

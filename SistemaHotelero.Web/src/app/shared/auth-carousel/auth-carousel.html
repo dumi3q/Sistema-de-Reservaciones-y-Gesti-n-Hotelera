@@ -1,0 +1,120 @@
+<aside
+  class="visual-panel"
+  aria-roledescription="carrusel"
+  aria-label="Conoce HotelHub"
+  (mouseenter)="hovered.set(true)"
+  (mouseleave)="hovered.set(false)"
+  (focusin)="focused.set(true)"
+  (focusout)="onFocusOut($event)"
+>
+  @if (active() !== 1) {
+    <img
+      class="hotel-photo"
+      [src]="active() === 0 ? '/images/hotel-exterior.webp' : '/images/hotel-garden.webp'"
+      [alt]="
+        active() === 0
+          ? 'Imagen conceptual de HotelHub: fachada crema, vegetación tropical y detalles verde bosque'
+          : 'Imagen conceptual del jardín y piscina del hotel, con sillones verdes y arcos de piedra'
+      "
+    />
+    <div class="photo-shade"></div>
+  }
+  <div class="visual-top">
+    <span class="pill"><i></i> TU HOTEL, EN ARMONÍA</span
+    ><span class="edition">0{{ active() + 1 }} — HOTELHUB</span>
+  </div>
+  <div
+    class="slide-content"
+    [class.is-photo]="active() !== 1"
+    aria-roledescription="diapositiva"
+    [attr.aria-label]="'Vista ' + (active() + 1) + ' de 3'"
+  >
+    @if (active() === 1) {
+      <div class="scene">
+        <div class="orbit orbit-one"></div>
+        <div class="orbit orbit-two"></div>
+        <div class="mini-dashboard">
+          <div class="mini-sidebar">
+            <span class="mini-logo">H</span><b></b><b></b><b></b><b></b>
+          </div>
+          <div class="mini-body">
+            <div class="mini-header">
+              <span>Un buen día comienza aquí.</span><span class="mini-avatar">AM</span>
+            </div>
+            <div class="mini-metrics">
+              <div>
+                <small>Ocupación</small><strong>84<span>%</span></strong
+                ><em>↑ 12% este mes</em>
+              </div>
+              <div><small>Huéspedes</small><strong>128</strong><em>Una estancia memorable</em></div>
+            </div>
+            <div class="chart-title">
+              Una semana de grandes estancias <span>Esta semana ⌄</span>
+            </div>
+            <div class="bars">
+              @for (height of [42, 65, 51, 79, 68, 94, 82]; track $index) {
+                <div>
+                  <span [style.height.%]="height"></span
+                  ><small>{{ ['L', 'M', 'M', 'J', 'V', 'S', 'D'][$index] }}</small>
+                </div>
+              }
+            </div>
+            <div class="mini-row">
+              <span class="room-icon">⌂</span>
+              <div>
+                <strong>Suite Ejecutiva</strong><small>Todo listo para una nueva llegada</small>
+              </div>
+              <span class="status">Disponible</span>
+            </div>
+          </div>
+        </div>
+        <div class="floating-card">
+          <span class="check">✓</span>
+          <div>
+            <strong>Una bienvenida perfecta</strong><small>Habitación lista para recibir</small>
+          </div>
+          <span class="spark">✧</span>
+        </div>
+        <div class="occupancy-card">
+          <span>La hospitalidad en movimiento</span>
+          <div class="avatar-stack">
+            <b>AM</b><b>LC</b><b>SR</b><small>Un equipo. Una experiencia.</small>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="photo-space">
+        <span class="photo-brand"><b>H</b> HOTELHUB</span
+        ><span class="photo-caption">IMAGEN CONCEPTUAL</span>
+      </div>
+    }
+    <div class="visual-copy">
+      <p class="eyebrow">{{ slides[active()].eyebrow }}</p>
+      <h2>{{ slides[active()].title }}</h2>
+      <p>{{ slides[active()].description }}</p>
+    </div>
+  </div>
+  <div class="visual-bottom">
+    <div class="slide-controls" role="group" aria-label="Elegir imagen">
+      @for (slide of slides; track $index) {
+        <button
+          type="button"
+          [class.slide-active]="active() === $index"
+          [attr.aria-label]="'Mostrar imagen ' + ($index + 1) + ': ' + slide.label"
+          [attr.aria-pressed]="active() === $index"
+          (click)="select($index)"
+        >
+          <span></span>
+        </button>
+      }
+    </div>
+    <button
+      type="button"
+      class="pause-control"
+      (click)="paused.set(!paused())"
+      [attr.aria-label]="paused() ? 'Reanudar carrusel' : 'Pausar carrusel'"
+    >
+      {{ paused() ? '▶' : 'Ⅱ' }}
+    </button>
+  </div>
+</aside>

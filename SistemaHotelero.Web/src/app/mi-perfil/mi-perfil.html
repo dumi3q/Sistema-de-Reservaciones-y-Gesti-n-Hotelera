@@ -1,0 +1,51 @@
+<section class="page" aria-labelledby="profile-title">
+  <header class="page-heading">
+    <div>
+      <h1 id="profile-title">Mi perfil</h1>
+      <p>
+        {{
+          staff
+            ? 'Actualiza tus datos de contacto en el panel del personal.'
+            : 'Revisa los datos de contacto de tu perfil de huésped.'
+        }}
+      </p>
+    </div>
+    <a
+      class="action secondary"
+      [routerLink]="staff ? '/explorar/inicio' : '/visitar/mis-reservaciones'"
+    >
+      {{ staff ? 'Volver al panel' : 'Mis reservaciones' }}
+    </a>
+  </header>
+  <p class="demo-note-inline">
+    Perfil de demostración. Usa datos ficticios. Los cambios se reinician al recargar.
+  </p>
+  @if (staff) {
+    <p>Rol de demostración <strong class="badge">Administrador</strong></p>
+  }
+  <form class="reception-panel profile-form" [formGroup]="form" (ngSubmit)="save()">
+    <label class="field"
+      >Nombre completo<input formControlName="name" maxlength="100" required
+    /></label>
+    <label class="field"
+      >Correo electrónico (opcional)<input type="email" formControlName="email" maxlength="150"
+    /></label>
+    <label class="field"
+      >Teléfono (opcional)<input
+        type="tel"
+        formControlName="phone"
+        maxlength="25"
+        placeholder="+506 0000 0000"
+    /></label>
+    <div class="profile-actions">
+      <button class="action primary" type="submit">Guardar perfil</button>
+      <button class="action secondary" type="button" [disabled]="form.pristine" (click)="reset()">
+        Descartar cambios
+      </button>
+    </div>
+    <p class="notice" role="status">{{ message() }}</p>
+    @if (error()) {
+      <p class="form-error" role="alert">{{ error() }}</p>
+    }
+  </form>
+</section>

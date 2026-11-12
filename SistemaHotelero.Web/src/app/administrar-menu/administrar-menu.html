@@ -1,0 +1,150 @@
+<section class="page" aria-labelledby="menu-admin-title" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">ADMINISTRACIÓN</p>
+      <h1 id="menu-admin-title">Menú del restaurante</h1>
+      <p>Administra los platillos, precios y disponibilidad del menú.</p>
+    </div>
+    <button
+      class="action primary"
+      type="button"
+      [disabled]="loading()"
+      (click)="edit(); editor.scrollIntoView({ block: 'nearest' })"
+    >
+      Nuevo platillo
+    </button>
+  </header>
+  <app-admin-nav />
+  <p class="demo-note-inline">
+    Los cambios se reflejan en el menú público y en pedidos nuevos de la demo.
+    <a routerLink="/visitar/restaurante">Ver menú público</a>
+  </p>
+
+  <div class="work-grid">
+    <section class="reception-panel work-pane" aria-label="Catálogo de platillos">
+      <div class="work-heading admin-filters">
+        <label class="field"
+          >Buscar platillo
+          <input
+            #search
+            type="search"
+            placeholder="Nombre o categoría"
+            (input)="query.set(search.value)"
+          />
+        </label>
+        <label class="field"
+          >Categoría
+          <select #categorySelect (change)="category.set(categorySelect.value)">
+            <option value="">Todas</option>
+            @for (entry of categories; track entry) {
+              <option [value]="entry">{{ entry }}</option>
+            }
+          </select>
+        </label>
+      </div>
+      <div class="work-scroll" tabindex="0" role="region" aria-label="Resultados de platillos">
+        @if (loading()) {
+          <div class="loading-rows" role="status" aria-label="Cargando platillos">
+            @for (row of [1, 2, 3, 4]; track row) {
+              <app-skeleton [height]="46" />
+            }
+          </div>
+        } @else {
+          @for (item of filtered(); track item.id) {
+            <button
+              class="work-choice"
+              type="button"
+              [attr.aria-pressed]="selectedId() === item.id"
+              (click)="edit(item); editor.scrollIntoView({ block: 'nearest' })"
+            >
+              <span
+                ><strong>{{ item.name }}</strong
+                ><small>{{ item.category }}</small></span
+              >
+              <span
+                ><strong>{{ item.price | currency: 'USD' }}</strong
+                ><small>{{ item.available === false ? 'Agotado' : 'Disponible' }}</small></span
+              >
+            </button>
+          } @empty {
+            <p class="empty">No encontramos platillos con esos filtros.</p>
+          }
+        }
+      </div>
+    </section>
+
+    <section #editor class="reception-panel work-pane" aria-label="Editar platillo">
+      @if (loading()) {
+        <div class="loading-rows">
+          <app-skeleton [height]="52" /><app-skeleton [height]="95" /><app-skeleton [height]="95" />
+        </div>
+      } @else if (selected() || creating()) {
+        <div class="work-heading">
+          <h2>{{ selected()?.name ?? 'Nuevo platillo' }}</h2>
+        </div>
+        <form class="admin-form" [formGroup]="form" (ngSubmit)="save()">
+          <div class="work-scroll form-fields">
+            <label class="field"
+              >Nombre<input type="text" maxlength="80" formControlName="name"
+            /></label>
+            <label class="field"
+              >Descripción<textarea
+                rows="3"
+                maxlength="300"
+                formControlName="description"
+              ></textarea>
+            </label>
+            <label class="field"
+              >Categoría
+              <select formControlName="category">
+                @for (entry of categories; track entry) {
+                  <option [value]="entry">{{ entry }}</option>
+                }
+              </select>
+            </label>
+            <div class="number-fields">
+              <label class="field"
+                >Precio (USD)<input
+                  type="number"
+                  min="0.01"
+                  max="100000"
+                  step="0.01"
+                  formControlName="price"
+              /></label>
+              <label class="field"
+                >Preparación (min)<input
+                  type="number"
+                  min="1"
+                  max="300"
+                  step="1"
+                  formControlName="minutes"
+              /></label>
+            </div>
+            <label class="check"
+              ><input type="checkbox" formControlName="available" /> Disponible para pedir</label
+            >
+          </div>
+          <div class="work-footer">
+            <button class="action primary" type="submit">Guardar platillo</button>
+            @if (selected(); as item) {
+              <button
+                class="action secondary"
+                type="button"
+                [disabled]="form.pristine"
+                (click)="edit(item); editor.scrollIntoView({ block: 'nearest' })"
+              >
+                Descartar
+              </button>
+            }
+            <p class="form-message" role="status">{{ notice() }}</p>
+            @if (error()) {
+              <p class="form-error" role="alert">{{ error() }}</p>
+            }
+          </div>
+        </form>
+      } @else {
+        <p class="empty">Selecciona un platillo o crea uno nuevo.</p>
+      }
+    </section>
+  </div>
+</section>

@@ -1,0 +1,93 @@
+.demo-note-inline {
+  flex-wrap: wrap;
+}
+
+.demo-note-inline a {
+  color: var(--forest);
+  font-weight: 600;
+}
+
+.admin-filters {
+  display: grid;
+  gap: 8px;
+}
+
+.field select,
+.field textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 7px 10px;
+  border: 1px solid #c6d3c6;
+  border-radius: 7px;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.admin-form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.form-fields {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 6px 15px 15px;
+}
+
+.number-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+}
+
+.check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--forest);
+}
+
+.admin-form .work-footer {
+  justify-content: flex-start;
+}
+
+.form-message,
+.form-error {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 14px;
+}
+
+.form-message:empty {
+  display: none;
+}
+
+.form-error {
+  color: #842e2b;
+}
+
+.work-pane {
+  block-size: clamp(420px, 66dvh, 640px);
+}
+
+@media (max-width: 720px) {
+  .work-pane:first-child {
+    block-size: 275px;
+  }
+}

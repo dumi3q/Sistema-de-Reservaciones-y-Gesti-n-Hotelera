@@ -1,0 +1,107 @@
+<section class="page" [class.room-service]="roomService" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <h1>{{ roomService ? 'Servicio a la habitación' : 'Restaurante' }}</h1>
+      <p>
+        {{
+          roomService
+            ? 'Agrega platillos y revisa el carrito para pedir a tu habitación.'
+            : 'Consulta la carta y los precios antes de tu visita al restaurante.'
+        }}
+      </p>
+    </div>
+    <a
+      class="action secondary"
+      [routerLink]="roomService ? '/visitar/restaurante' : '/visitar/servicio-habitacion'"
+    >
+      {{ roomService ? 'Ver carta del restaurante' : 'Pedir a la habitación' }}
+    </a>
+    @if (!roomService) {
+      <a class="action primary" routerLink="/visitar/reservar-mesa">Reservar una mesa</a>
+    }
+  </header>
+  <p class="menu-notice">
+    {{
+      roomService
+        ? 'Para enviar el pedido necesitas una estadía con check-in registrado. Precios de prueba en USD.'
+        : 'Carta de referencia para el consumo en el restaurante. Precios de prueba en USD.'
+    }}
+  </p>
+  <label class="field mobile-category"
+    >Categoría del menú
+    <select #categorySelect [value]="category()" (change)="category.set(categorySelect.value)">
+      @for (item of categories; track item) {
+        <option [value]="item">{{ item === 'Todo' ? 'Todas las categorías' : item }}</option>
+      }
+    </select>
+  </label>
+  <div class="category-tabs" role="group" aria-label="Categorías del menú">
+    @for (item of categories; track item) {
+      <button
+        [class.active]="category() === item"
+        [attr.aria-pressed]="category() === item"
+        (click)="category.set(item)"
+      >
+        {{ item }}
+      </button>
+    }
+  </div>
+  <div class="menu-grid">
+    @if (loading()) {
+      @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+        <app-skeleton [height]="230" />
+      }
+    } @else {
+      @for (item of filtered(); track item.id) {
+        <article class="menu-card">
+          <span class="category-label">{{ item.category }}</span>
+          <h2>{{ item.name }}</h2>
+          <p>{{ item.description }}</p>
+          <div class="menu-meta">
+            <strong>{{ item.price | currency: 'USD' }}</strong
+            ><span>{{ item.minutes }} min aprox.</span>
+          </div>
+          @if (roomService) {
+            @let quantity = quantities().get(item.id) ?? 0;
+            <div class="dish-actions">
+              <button
+                class="action primary"
+                type="button"
+                [disabled]="quantity >= 99"
+                [attr.aria-label]="'Agregar ' + item.name"
+                (click)="add(item)"
+              >
+                {{ quantity ? 'Agregar otro' : 'Agregar al carrito' }}
+              </button>
+              @if (quantity) {
+                <strong class="dish-count">{{ quantity }} en carrito</strong>
+              }
+            </div>
+          }
+        </article>
+      } @empty {
+        <p role="status">No hay platillos disponibles en esta categoría.</p>
+      }
+    }
+  </div>
+  @if (roomService) {
+    <aside class="cart-dock" aria-label="Carrito de servicio a la habitación">
+      <div class="cart-text">
+        <strong
+          >Carrito · {{ orders.count() }}
+          {{ orders.count() === 1 ? 'producto' : 'productos' }}</strong
+        >
+        <span class="cart-status" role="status">
+          {{
+            lastAdded()
+              ? '✓ Agregaste ' + lastAdded() + ' · ' + orders.count() + ' en el carrito'
+              : 'Subtotal ' + (subtotal() | currency: 'USD')
+          }}
+        </span>
+      </div>
+      <a class="action cart-link" routerLink="/visitar/mis-pedidos"
+        >Ver carrito <strong>{{ subtotal() | currency: 'USD' }}</strong></a
+      >
+    </aside>
+  }
+</section>

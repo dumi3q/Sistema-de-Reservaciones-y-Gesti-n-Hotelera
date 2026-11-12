@@ -1,0 +1,165 @@
+<section class="page" [attr.aria-busy]="loading()" aria-labelledby="table-bookings-title">
+  <header class="page-heading">
+    <div>
+      <h1 id="table-bookings-title">
+        {{ staff ? 'Reservaciones de mesas' : 'Reservar una mesa' }}
+      </h1>
+      <p>
+        {{
+          staff
+            ? 'Consulta las reservaciones y registra la llegada de los comensales.'
+            : 'Elige el horario y una mesa con espacio para tu grupo.'
+        }}
+      </p>
+    </div>
+    <a
+      class="action secondary"
+      [routerLink]="staff ? '/explorar/restaurante' : '/visitar/restaurante'"
+      >{{ staff ? 'Volver al mapa' : 'Ver carta del restaurante' }}</a
+    >
+  </header>
+  <p class="demo-note-inline">
+    Reservaciones de prueba. Cada turno dura 90 minutos y los cambios se reinician al recargar.
+  </p>
+  <p class="notice" role="status">{{ message() }}</p>
+  @if (error()) {
+    <p class="form-error" role="alert">{{ error() }}</p>
+  }
+
+  @if (!staff) {
+    <form
+      class="reception-panel table-filters"
+      (submit)="$event.preventDefault(); searched.set(true)"
+    >
+      <label class="field"
+        >Fecha
+        <input
+          #day
+          type="date"
+          required
+          [min]="demo.referenceDate"
+          [value]="date()"
+          (input)="date.set(day.value); resetSearch()"
+        />
+      </label>
+      <label class="field"
+        >Hora
+        <select #slot [value]="time()" (change)="time.set(slot.value); resetSearch()">
+          @for (item of demo.times; track item) {
+            <option [value]="item">{{ item }}</option>
+          }
+        </select>
+      </label>
+      <label class="field"
+        >Personas
+        <input
+          #count
+          type="number"
+          required
+          min="1"
+          max="6"
+          [value]="people()"
+          (input)="people.set(count.valueAsNumber); resetSearch()"
+        />
+      </label>
+      <button class="action primary" type="submit" [disabled]="loading()">Buscar mesas</button>
+    </form>
+    @if (searched()) {
+      <div class="reception-panel table-results">
+        <p role="status">
+          {{
+            available().length
+              ? available().length + ' mesas disponibles para este turno.'
+              : 'No hay mesas para ese turno y cantidad de personas. Prueba otra hora.'
+          }}
+        </p>
+        @if (available().length) {
+          <div class="table-options" role="group" aria-label="Mesas disponibles">
+            @for (table of available(); track table.id) {
+              <button
+                class="action secondary"
+                type="button"
+                [class.selected]="selected() === table.id"
+                [attr.aria-pressed]="selected() === table.id"
+                (click)="selected.set(table.id)"
+              >
+                {{ table.id }} · {{ table.area }} · {{ table.seats }} plazas
+              </button>
+            }
+          </div>
+          <button class="action primary" type="button" [disabled]="!selected()" (click)="reserve()">
+            Confirmar mesa de prueba
+          </button>
+        }
+      </div>
+    }
+  }
+
+  <section class="reception-panel work-pane table-history" aria-label="Reservaciones de mesas">
+    <header class="work-heading table-filters">
+      <h2>{{ staff ? 'Agenda de mesas' : 'Mis reservas de mesa' }}</h2>
+      @if (staff) {
+        <label class="field"
+          >Fecha de la agenda<input
+            #agenda
+            type="date"
+            [value]="date()"
+            (input)="date.set(agenda.value)"
+        /></label>
+        <button class="action secondary" type="button" (click)="date.set('')">
+          Ver todas las fechas
+        </button>
+      }
+    </header>
+    <div class="work-scroll" role="region" aria-label="Resultados de reservas de mesa" tabindex="0">
+      @if (loading()) {
+        <div class="loading-rows" role="status" aria-label="Cargando mesas">
+          <app-skeleton [height]="56" /><app-skeleton [height]="56" />
+        </div>
+      } @else {
+        @for (item of visible(); track item.id) {
+          <article class="record table-record">
+            <div>
+              <strong>{{ item.table }} · {{ item.area }}</strong
+              ><small>{{ item.id }} · {{ item.guest }}</small>
+            </div>
+            <div>
+              {{ item.date | date: 'dd/MM/yyyy' : 'UTC' }} · {{ item.time
+              }}<small>{{ item.people }} personas</small>
+            </div>
+            <span class="badge" [attr.data-status]="item.status">{{ item.status }}</span>
+            @if (item.status === 'Confirmada') {
+              <div class="table-options">
+                @if (staff) {
+                  <button
+                    class="action primary"
+                    type="button"
+                    (click)="update(item.id, 'Atendida')"
+                  >
+                    Registrar llegada
+                  </button>
+                }
+                <button
+                  class="action secondary"
+                  type="button"
+                  (click)="update(item.id, 'Cancelada')"
+                >
+                  Cancelar reserva
+                </button>
+              </div>
+            } @else if (staff && item.status === 'Atendida') {
+              <a
+                class="action secondary"
+                routerLink="/explorar/restaurante/pedidos"
+                [queryParams]="{ mesa: item.table }"
+                >Abrir comanda</a
+              >
+            }
+          </article>
+        } @empty {
+          <p class="empty">No hay reservas de mesa para mostrar.</p>
+        }
+      }
+    </div>
+  </section>
+</section>

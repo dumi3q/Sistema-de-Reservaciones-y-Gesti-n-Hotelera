@@ -1,0 +1,120 @@
+.work-grid {
+  display: grid;
+  grid-template-columns: minmax(225px, 1fr) minmax(0, 2fr);
+  gap: 14px;
+}
+
+.work-pane {
+  display: flex;
+  flex-direction: column;
+  block-size: clamp(380px, 64dvh, 630px);
+  min-width: 0;
+}
+
+.work-heading,
+.work-footer {
+  padding: 12px 15px;
+}
+
+.work-heading h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.detail-head,
+.work-footer,
+.line-item,
+.work-choice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.work-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.work-scroll:focus-visible,
+.work-choice:focus-visible {
+  outline-offset: -3px;
+}
+
+.work-choice,
+.line-item {
+  padding: 9px 15px;
+  border-top: 1px solid var(--border);
+}
+
+.work-choice {
+  width: 100%;
+  text-align: left;
+  border-inline: 0;
+  border-bottom: 0;
+  color: var(--ink);
+  background: white;
+  font-size: 14px;
+}
+
+.work-choice:hover,
+.work-choice[aria-pressed='true'] {
+  background: #edf3ea;
+}
+
+.work-pane small {
+  display: block;
+  color: var(--muted);
+}
+
+.work-pane .badge {
+  font-size: 13px;
+}
+
+.badge[data-status='Por cobrar'],
+.badge[data-status='Por tomar orden'] {
+  background: #f7ecd3;
+  color: #64491f;
+}
+
+.badge[data-status='En preparación'] {
+  background: #e0f0f1;
+  color: #23505a;
+}
+
+.badge[data-status='Atendida'] {
+  background: #def0e1;
+  color: #24533a;
+}
+
+.work-footer {
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.work-total {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+}
+
+.work-total strong {
+  font-size: 20px;
+}
+
+.operation-message {
+  margin: 8px 0;
+}
+
+@media (max-width: 720px) {
+  .work-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .work-pane:first-child {
+    block-size: 215px;
+  }
+}

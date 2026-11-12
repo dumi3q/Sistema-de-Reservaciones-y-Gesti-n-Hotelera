@@ -1,0 +1,248 @@
+<section class="page" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">RECEPCIÓN</p>
+      <h1>Gestión de reservaciones</h1>
+      <p>Consulta reservas, prepara las llegadas y registra nuevas estancias.</p>
+    </div>
+    <a class="button-primary" routerLink="/explorar/reservar"
+      >Nueva reserva <span aria-hidden="true">＋</span></a
+    >
+  </header>
+
+  <p class="demo-note-inline">Datos de prueba. Los cambios duran hasta que recargues la página.</p>
+  <p class="feedback" role="status">{{ feedback() }}</p>
+
+  @if (draft(); as selection) {
+    <article class="panel draft">
+      <p class="eyebrow">NUEVA RESERVA</p>
+      <h2>{{ selection.roomId }} · {{ draftRoom()?.type }}</h2>
+      <p>
+        {{ selection.start | date: 'dd/MM/yyyy' : 'UTC' }} →
+        {{ selection.end | date: 'dd/MM/yyyy' : 'UTC' }} · {{ selection.guests }} adultos ·
+        {{ draftTotal() | currency: 'USD' }} de referencia
+      </p>
+      <form (submit)="$event.preventDefault(); createReservation()">
+        <label
+          >Nombre del huésped
+          <input
+            [formControl]="guest"
+            type="text"
+            maxlength="100"
+            autocomplete="off"
+            placeholder="Nombre completo"
+          />
+        </label>
+        <div class="actions">
+          <button class="button-primary" type="submit">Crear reserva de prueba</button>
+          <button class="button-secondary" type="button" (click)="clearDraft()">Descartar</button>
+        </div>
+      </form>
+      @if (guest.touched && !guest.value.trim()) {
+        <p class="error" role="alert">Escribe el nombre del huésped.</p>
+      }
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+    </article>
+  }
+
+  <div class="summary" aria-label="Resumen de reservaciones">
+    @for (card of summary; track card.label) {
+      <button
+        class="panel summary-card"
+        type="button"
+        [attr.aria-pressed]="status() === card.status"
+        (click)="status.set(card.status)"
+      >
+        <span>{{ card.label }}</span>
+        <strong>{{ loading() ? '–' : count(card.status) }}</strong>
+      </button>
+    }
+  </div>
+
+  <article class="panel reservation-list">
+    <div class="list-header">
+      <div>
+        <h2>Reservaciones</h2>
+        <p role="status">
+          {{
+            loading()
+              ? 'Cargando reservaciones…'
+              : filtered().length + ' de ' + reservations().length + ' registros'
+          }}
+        </p>
+      </div>
+      <div class="filters">
+        <label
+          >Buscar
+          <input
+            #search
+            type="search"
+            placeholder="Huésped, habitación o código"
+            [value]="query()"
+            (input)="query.set(search.value)"
+          />
+        </label>
+        <label
+          >Estado
+          <select #statusFilter [value]="status()" (change)="status.set(statusFilter.value)">
+            <option value="">Todos</option>
+            @for (option of statuses; track option) {
+              <option [value]="option">{{ option }}</option>
+            }
+          </select>
+        </label>
+      </div>
+    </div>
+    <div
+      class="reservation-results"
+      tabindex="0"
+      role="region"
+      aria-label="Resultados de reservaciones"
+    >
+      @if (loading()) {
+        <div class="reservation-placeholder">
+          @for (row of [1, 2, 3, 4, 5]; track row) {
+            <app-skeleton [height]="50" />
+          }
+        </div>
+      } @else if (filtered().length) {
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Reserva / huésped</th>
+              <th scope="col">Habitación</th>
+              <th scope="col">Entrada</th>
+              <th scope="col">Salida</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of filtered(); track item.id) {
+              <tr>
+                <td>
+                  <strong>{{ item.guest }}</strong
+                  ><small>{{ item.id }}</small>
+                </td>
+                <td>
+                  <span class="mobile-label" aria-hidden="true">Habitación </span>{{ item.roomId }}
+                </td>
+                <td>
+                  <span class="mobile-label" aria-hidden="true">Entrada </span
+                  >{{ item.start | date: 'dd/MM/yyyy' : 'UTC' }}
+                </td>
+                <td>
+                  <span class="mobile-label" aria-hidden="true">Salida </span
+                  >{{ item.end | date: 'dd/MM/yyyy' : 'UTC' }}
+                </td>
+                <td>
+                  <span class="status-pill" [attr.data-status]="item.status">{{
+                    item.status
+                  }}</span>
+                </td>
+                <td>
+                  <button
+                    class="button-secondary"
+                    type="button"
+                    (click)="showDetail(item)"
+                    [attr.aria-label]="'Ver detalle de ' + item.id"
+                  >
+                    Ver detalle
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="empty">
+          <p>No encontramos reservaciones con esos filtros.</p>
+          <button class="button-secondary" type="button" (click)="query.set(''); status.set('')">
+            Limpiar filtros
+          </button>
+        </div>
+      }
+    </div>
+  </article>
+</section>
+
+<dialog #detail aria-labelledby="reservation-title">
+  @if (selected(); as item) {
+    <div class="dialog-heading">
+      <div>
+        <p class="eyebrow">{{ item.id }}</p>
+        <h2 id="reservation-title">{{ item.guest }}</h2>
+      </div>
+      <button class="button-secondary" type="button" autofocus (click)="closeDetail()">
+        Cerrar
+      </button>
+    </div>
+    <span class="status-pill" [attr.data-status]="item.status">{{ item.status }}</span>
+    <dl>
+      <div>
+        <dt>Habitación</dt>
+        <dd>{{ item.roomId }}</dd>
+      </div>
+      <div>
+        <dt>Adultos</dt>
+        <dd>{{ item.guests }}</dd>
+      </div>
+      <div>
+        <dt>Entrada</dt>
+        <dd>{{ item.start | date: 'dd/MM/yyyy' : 'UTC' }}</dd>
+      </div>
+      <div>
+        <dt>Salida</dt>
+        <dd>{{ item.end | date: 'dd/MM/yyyy' : 'UTC' }}</dd>
+      </div>
+    </dl>
+    <app-contacto-huesped [guestId]="item.guestId" [reservationId]="item.id" />
+    @if (cancelRequested()) {
+      <p>¿Cancelar esta reservación y liberar la habitación para esas fechas?</p>
+      <div class="actions">
+        <button class="button-danger" type="button" (click)="updateStatus('Cancelada')">
+          Sí, cancelar reserva
+        </button>
+        <button class="button-secondary" type="button" (click)="cancelRequested.set(false)">
+          Conservar reserva
+        </button>
+      </div>
+    } @else {
+      <div class="actions">
+        @switch (item.status) {
+          @case ('Pendiente') {
+            <button class="button-primary" type="button" (click)="updateStatus('Confirmada')">
+              Confirmar reserva
+            </button>
+          }
+          @case ('Confirmada') {
+            <button class="button-primary" type="button" (click)="updateStatus('Alojado')">
+              Registrar check-in
+            </button>
+          }
+          @case ('Alojado') {
+            <button class="button-primary" type="button" (click)="updateStatus('Finalizada')">
+              Registrar check-out
+            </button>
+          }
+        }
+        @if (item.status === 'Pendiente' || item.status === 'Confirmada') {
+          <a
+            class="button-secondary edit-booking"
+            [routerLink]="['/explorar/reservaciones/editar', item.id]"
+            (click)="closeDetail()"
+            >Editar reserva</a
+          >
+          <button class="button-secondary" type="button" (click)="cancelRequested.set(true)">
+            Cancelar reserva
+          </button>
+        }
+      </div>
+    }
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+  }
+</dialog>

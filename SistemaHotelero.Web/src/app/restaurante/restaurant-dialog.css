@@ -1,0 +1,62 @@
+.table-dialog {
+  border: 1px solid var(--border);
+  padding: 0;
+  border-radius: 14px;
+  width: min(470px, calc(100vw - 28px));
+  max-height: calc(100dvh - 40px);
+  color: var(--ink);
+  background: white;
+  box-shadow: 0 25px 90px #172c3655;
+}
+.table-dialog::backdrop {
+  background: #13251c80;
+  backdrop-filter: blur(3px);
+}
+.table-dialog[open] {
+  animation: page-in 0.2s ease both;
+}
+.close-detail {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid #dbe1d2;
+  background: #fffefa;
+  color: var(--forest);
+  z-index: 2;
+  font-size: 16px;
+}
+.table-detail {
+  border: 0;
+  border-radius: 0;
+}
+.table-detail-top {
+  padding-top: 25px;
+  padding-right: 55px;
+}
+.table-detail-top .eyebrow {
+  font-size: 11px;
+}
+.table-detail-top > div {
+  flex-wrap: wrap;
+}
+.table-detail-body {
+  padding: 18px;
+}
+.guest-block {
+  margin: 10px 0 18px;
+  padding: 14px 0;
+}
+.order-empty {
+  padding: 12px;
+}
+.attention-tip {
+  margin: 14px 0;
+}
+.simulation-note {
+  margin-bottom: 0;
+}

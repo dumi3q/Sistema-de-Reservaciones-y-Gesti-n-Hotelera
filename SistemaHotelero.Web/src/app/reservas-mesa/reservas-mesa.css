@@ -1,0 +1,53 @@
+.table-filters,
+.table-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+}
+
+form.table-filters,
+.table-results {
+  padding: 12px;
+}
+
+.table-filters select {
+  min-height: 42px;
+  padding: 7px 10px;
+  border: 1px solid #c6d3c6;
+  border-radius: 7px;
+  background: white;
+  color: var(--ink);
+}
+
+.table-results,
+.table-history {
+  margin-top: 12px;
+}
+
+.table-results p {
+  margin: 0 0 8px;
+}
+
+.table-results .table-options {
+  margin-bottom: 10px;
+}
+
+.table-options .selected {
+  background: var(--forest);
+  color: white;
+}
+
+.table-history {
+  block-size: clamp(235px, 44dvh, 480px);
+}
+
+.table-record {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto minmax(0, 1.3fr);
+}
+
+@media (max-width: 800px) {
+  .table-record {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
