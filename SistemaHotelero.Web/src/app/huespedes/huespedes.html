@@ -1,0 +1,114 @@
+<section class="page" aria-labelledby="guest-title" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">RECEPCIÓN</p>
+      <h1 id="guest-title">Huéspedes</h1>
+      <p>Consulta las reservaciones y el historial de estadías por huésped.</p>
+    </div>
+    <a class="action secondary" routerLink="/explorar/estadias">Ver estadías</a>
+  </header>
+
+  <p class="demo-note-inline">Directorio de prueba generado a partir de las reservaciones.</p>
+
+  <div class="guest-layout" [class.has-selection]="!loading() && selected()">
+    <section class="reception-panel directory" aria-labelledby="directory-title">
+      <div class="panel-header">
+        <h2 id="directory-title">Directorio</h2>
+        <label class="field"
+          >Buscar huésped
+          <input
+            #search
+            type="search"
+            placeholder="Nombre, habitación o código"
+            [value]="query()"
+            (input)="query.set(search.value)"
+          />
+        </label>
+        <p class="count" role="status">
+          {{ loading() ? 'Cargando huéspedes…' : filtered().length + ' huéspedes' }}
+        </p>
+      </div>
+      <div class="guest-list" tabindex="0" role="region" aria-label="Resultados del directorio">
+        @if (loading()) {
+          <div class="loading-rows">
+            @for (row of [1, 2, 3, 4, 5]; track row) {
+              <app-skeleton [height]="46" />
+            }
+          </div>
+        } @else {
+          @for (guest of filtered(); track guest.id) {
+            <button
+              class="guest-row"
+              type="button"
+              [attr.aria-pressed]="selectedId() === guest.id"
+              (click)="selectGuest(guest.id)"
+            >
+              <span
+                ><strong>{{ guest.name }}</strong
+                ><small
+                  >{{ guest.reservations.length }}
+                  {{ guest.reservations.length === 1 ? 'reserva' : 'reservas' }}</small
+                ></span
+              >
+              <span aria-hidden="true">→</span>
+            </button>
+          } @empty {
+            <div class="empty">
+              No encontramos huéspedes con esa búsqueda.
+              <button
+                class="action secondary"
+                type="button"
+                (click)="query.set(''); search.focus()"
+              >
+                Limpiar búsqueda
+              </button>
+            </div>
+          }
+        }
+      </div>
+    </section>
+
+    <section class="reception-panel profile" aria-labelledby="profile-title">
+      @if (loading()) {
+        <div class="loading-rows">
+          <app-skeleton [height]="42" />
+          <app-skeleton [height]="64" />
+          <app-skeleton [height]="64" />
+        </div>
+      } @else if (selected(); as guest) {
+        <div class="panel-header">
+          <h2 #profileHeading id="profile-title" tabindex="-1">{{ guest.name }}</h2>
+          <app-contacto-huesped [guestId]="guest.id" />
+          <p class="count">Historial de reservaciones</p>
+          <button class="action secondary back" type="button" (click)="closeProfile()">
+            Volver al directorio
+          </button>
+        </div>
+        @for (item of guest.reservations; track item.id) {
+          <article class="record history-record">
+            <div>
+              <strong>{{ item.roomId }}</strong
+              ><small>{{ item.id }}</small>
+            </div>
+            <div>
+              <small>Fechas</small>{{ item.start | date: 'dd/MM/yyyy' : 'UTC' }} –
+              {{ item.end | date: 'dd/MM/yyyy' : 'UTC' }}
+            </div>
+            <span class="badge" [attr.data-status]="item.status">{{ item.status }}</span>
+            <a
+              class="action secondary"
+              routerLink="/explorar/reservaciones"
+              [queryParams]="{ buscar: item.id }"
+              >Ver reserva</a
+            >
+          </article>
+        }
+      } @else {
+        <div class="panel-header">
+          <h2 id="profile-title">Ficha del huésped</h2>
+          <p class="count">Selecciona una persona del directorio para ver su historial.</p>
+        </div>
+      }
+    </section>
+  </div>
+</section>

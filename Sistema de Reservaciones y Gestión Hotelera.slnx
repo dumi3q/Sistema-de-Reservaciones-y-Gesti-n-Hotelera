@@ -3,5 +3,13 @@
   <Project Path="SistemaHotelero.API/SistemaHotelero.API.csproj" />
   <Project Path="SistemaHotelero.Dominio/SistemaHotelero.Dominio.csproj" />
   <Project Path="SistemaHotelero.LogicaNegocio/SistemaHotelero.LogicaNegocio.csproj" />
+  <Project Path="SistemaHotelero.Movil/SistemaHotelero.Movil.esproj">
+    <Build />
+    <Deploy />
+  </Project>
   <Project Path="SistemaHotelero.Utilitarios/SistemaHotelero.Utilitarios.csproj" />
+  <Project Path="SistemaHotelero.Web/SistemaHotelero.Web.esproj">
+    <Build />
+    <Deploy />
+  </Project>
 </Solution>

@@ -1,0 +1,164 @@
+<section class="page" aria-labelledby="orders-title" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">RESTAURANTE</p>
+      <h1 id="orders-title">Pedidos</h1>
+      <p>Prepara la comanda y sigue el servicio de cada mesa.</p>
+    </div>
+    <div class="order-links">
+      <a class="action secondary" routerLink="/explorar/restaurante">Volver al mapa</a>
+      <a class="action primary" routerLink="/explorar/restaurante/habitaciones"
+        >Pedidos a habitación</a
+      >
+    </div>
+  </header>
+  <p class="demo-note-inline">Operación de prueba. Los cambios duran hasta que recargues.</p>
+  <div class="work-grid">
+    <section class="reception-panel work-pane" aria-label="Seleccionar mesa">
+      <div class="work-heading"><h2>Mesas</h2></div>
+      <div class="work-scroll" tabindex="0" role="region" aria-label="Lista de mesas">
+        @if (loading()) {
+          <div class="loading-rows" role="status" aria-label="Cargando mesas">
+            @for (row of [1, 2, 3, 4]; track row) {
+              <app-skeleton [height]="48" />
+            }
+          </div>
+        } @else {
+          @for (table of tables(); track table.id) {
+            <button
+              class="work-choice"
+              type="button"
+              [attr.aria-pressed]="tableId() === table.id"
+              (click)="select(table.id); orderDetail.scrollIntoView({ block: 'nearest' })"
+            >
+              <span
+                ><strong>{{ table.id }}</strong
+                ><small>{{ table.area }}</small></span
+              >
+              <span class="badge" [attr.data-status]="table.status">{{ table.status }}</span>
+            </button>
+          }
+        }
+      </div>
+    </section>
+
+    <section #orderDetail class="reception-panel work-pane" aria-label="Comanda">
+      @if (loading()) {
+        <div class="loading-rows">
+          <app-skeleton [height]="52" /><app-skeleton [height]="90" /><app-skeleton [height]="90" />
+        </div>
+      } @else if (selected(); as table) {
+        <div class="work-heading detail-head">
+          <div>
+            <h2>Mesa {{ table.id }}</h2>
+            <small>{{ table.people }} comensales · {{ table.area }}</small>
+          </div>
+          <span class="badge" [attr.data-status]="table.status">{{ table.status }}</span>
+        </div>
+        <div class="work-scroll" tabindex="0" role="region" aria-label="Detalle de la comanda">
+          @if (table.status === 'Por tomar orden') {
+            <div class="work-heading">
+              <label class="field"
+                >Buscar en el menú
+                <input
+                  #search
+                  type="search"
+                  placeholder="Platillo o categoría"
+                  [value]="query()"
+                  (input)="query.set(search.value)"
+                />
+              </label>
+            </div>
+            @for (dish of dishes(); track dish.id) {
+              <div class="line-item">
+                <div>
+                  <strong>{{ dish.name }}</strong
+                  ><small>{{
+                    dish.available === false ? 'Agotado' : (unitPrice(dish) | currency: 'USD')
+                  }}</small>
+                </div>
+                <div class="quantity-actions">
+                  @let quantity = orderLines()[dish.id]?.quantity ?? 0;
+                  <button
+                    class="action secondary step"
+                    type="button"
+                    [disabled]="quantity === 0"
+                    [attr.aria-label]="'Quitar ' + dish.name"
+                    (click)="adjust(dish, -1)"
+                  >
+                    −
+                  </button>
+                  <span>{{ quantity }}</span>
+                  <button
+                    class="action secondary step"
+                    type="button"
+                    [disabled]="quantity === 99 || dish.available === false"
+                    [attr.aria-label]="'Agregar ' + dish.name"
+                    (click)="adjust(dish, 1)"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <p class="empty">No encontramos platillos con esa búsqueda.</p>
+            }
+          } @else {
+            @for (item of charges(); track item.label) {
+              <div class="line-item">
+                <div>
+                  <strong>{{ item.label }}</strong
+                  ><small>{{ item.quantity }} × {{ item.unitCents / 100 | currency: 'USD' }}</small>
+                </div>
+                <strong>{{ (item.quantity * item.unitCents) / 100 | currency: 'USD' }}</strong>
+              </div>
+            } @empty {
+              <p class="empty">Abre el servicio para empezar a tomar la orden.</p>
+            }
+          }
+        </div>
+        <div class="work-footer">
+          <p class="work-total">
+            Total <strong>{{ total() | currency: 'USD' }}</strong>
+          </p>
+          @switch (table.status) {
+            @case ('Libre') {
+              <button class="action primary" type="button" (click)="advance()">
+                Abrir servicio
+              </button>
+            }
+            @case ('Por tomar orden') {
+              <button
+                class="action primary"
+                type="button"
+                [disabled]="!table.order.length"
+                (click)="advance()"
+              >
+                Enviar a cocina
+              </button>
+            }
+            @case ('En preparación') {
+              <button class="action primary" type="button" (click)="advance()">
+                Marcar como atendida
+              </button>
+            }
+            @case ('Atendida') {
+              <button class="action primary" type="button" (click)="advance()">
+                Pasar a cobro
+              </button>
+            }
+            @case ('Por cobrar') {
+              <a
+                class="action primary"
+                routerLink="/explorar/caja"
+                [queryParams]="{ cuenta: table.id }"
+                >Abrir cuenta en Caja</a
+              >
+            }
+          }
+        </div>
+      }
+    </section>
+  </div>
+  <p class="notice operation-message" role="status">{{ message() }}</p>
+</section>

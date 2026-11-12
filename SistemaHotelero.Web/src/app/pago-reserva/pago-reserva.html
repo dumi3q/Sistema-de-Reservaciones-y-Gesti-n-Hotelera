@@ -1,0 +1,126 @@
+<section class="page" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <h1>Método de pago</h1>
+      <p>Completa el paso de pago de tu reserva de prueba.</p>
+    </div>
+    <a class="action secondary" routerLink="/visitar/confirmar-reserva" [queryParams]="params"
+      >Volver al resumen</a
+    >
+  </header>
+  <p class="demo-note-inline">
+    Pago simulado. Usa una tarjeta de ejemplo y evita introducir datos reales.
+  </p>
+  @if (loading()) {
+    <div class="payment-grid" role="status" aria-label="Cargando pago">
+      <app-skeleton [height]="420" /><app-skeleton [height]="270" />
+    </div>
+  } @else if (available() && room(); as selected) {
+    <div class="payment-grid">
+      <form
+        class="reception-panel payment-panel"
+        (submit)="$event.preventDefault(); submit()"
+        autocomplete="off"
+        novalidate
+      >
+        <h2>Datos de la tarjeta</h2>
+        <div class="examples" role="group" aria-label="Tarjetas de ejemplo">
+          @for (example of examples; track example.brand) {
+            <button class="action secondary" type="button" (click)="useExample(example.number)">
+              Probar {{ example.brand }}
+            </button>
+          }
+        </div>
+        <label class="field"
+          >Número de tarjeta
+          <input
+            #cardNumber
+            inputmode="numeric"
+            [value]="formattedNumber()"
+            (input)="setNumber(cardNumber)"
+            placeholder="0000 0000 0000 0000"
+            maxlength="23"
+          />
+        </label>
+        <label class="field"
+          >Nombre del titular
+          <input
+            #cardHolder
+            [value]="holder()"
+            (input)="holder.set(cardHolder.value)"
+            placeholder="Huésped de prueba"
+            maxlength="60"
+          />
+        </label>
+        <div class="payment-fields">
+          <label class="field"
+            >Vencimiento (MM/AA)
+            <input
+              #cardExpiry
+              inputmode="numeric"
+              [value]="expiry()"
+              (input)="expiry.set(cardExpiry.value)"
+              placeholder="MM/AA"
+              maxlength="5"
+            />
+          </label>
+          <label class="field"
+            >Código de seguridad
+            <input
+              #cardCode
+              type="password"
+              inputmode="numeric"
+              [value]="code()"
+              (input)="code.set(cardCode.value)"
+              placeholder="•••"
+              maxlength="4"
+            />
+          </label>
+        </div>
+        <button class="action primary" type="submit" [disabled]="saving()">
+          Confirmar reserva de prueba
+        </button>
+        @if (error()) {
+          <p class="payment-error" role="alert">{{ error() }}</p>
+        }
+      </form>
+
+      <aside>
+        <div
+          class="card-preview"
+          [attr.data-brand]="brand()"
+          aria-label="Vista previa de la tarjeta"
+        >
+          <div class="card-header">
+            <span>HotelHub</span><strong aria-live="polite">{{ brand() }}</strong>
+          </div>
+          <span class="chip" aria-hidden="true"></span>
+          <div class="card-digits" aria-hidden="true">
+            •••• &nbsp; •••• &nbsp; •••• &nbsp;
+            {{ number().length >= 15 ? number().slice(-4) : '••••' }}
+          </div>
+          <div class="card-header">
+            <span>{{ holder() || 'Nombre del titular' }}</span
+            ><span>{{ expiry() || 'MM/AA' }}</span>
+          </div>
+        </div>
+        <div class="reception-panel payment-panel payment-summary">
+          <h2>Habitación {{ selected.id }}</h2>
+          <p>
+            <span>Subtotal de hospedaje</span><strong>{{ total() | currency: 'USD' }}</strong>
+          </p>
+          <p>
+            <span>Anticipo simulado</span><strong>{{ deposit() | currency: 'USD' }}</strong>
+          </p>
+        </div>
+      </aside>
+    </div>
+  } @else {
+    <div class="reception-panel payment-panel">
+      <h2>Selección no disponible</h2>
+      <a class="action primary" routerLink="/visitar/habitaciones" [queryParams]="params"
+        >Elegir habitación</a
+      >
+    </div>
+  }
+</section>

@@ -1,0 +1,160 @@
+<section class="page" aria-labelledby="stay-title" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">RECEPCIÓN</p>
+      <h1 id="stay-title">Estadías</h1>
+      <p>Gestiona las llegadas, las habitaciones alojadas y las salidas.</p>
+    </div>
+    <a class="action secondary" routerLink="/explorar/reservaciones">Ver reservaciones</a>
+  </header>
+
+  <p class="demo-note-inline">Datos de prueba. Los movimientos se reinician al recargar.</p>
+
+  <div class="stay-tools">
+    <div class="segments" role="group" aria-label="Tipo de movimiento">
+      <button type="button" [attr.aria-pressed]="tab() === 'llegadas'" (click)="select('llegadas')">
+        Llegadas <span>{{ loading() ? '–' : groups().llegadas.length }}</span>
+      </button>
+      <button type="button" [attr.aria-pressed]="tab() === 'alojados'" (click)="select('alojados')">
+        Alojados <span>{{ loading() ? '–' : groups().alojados.length }}</span>
+      </button>
+      <button type="button" [attr.aria-pressed]="tab() === 'salidas'" (click)="select('salidas')">
+        Salidas <span>{{ loading() ? '–' : groups().salidas.length }}</span>
+      </button>
+    </div>
+    <div class="stay-filters">
+      <label class="field"
+        >Buscar
+        <input
+          #staySearch
+          type="search"
+          placeholder="Huésped, habitación o reserva"
+          [value]="query()"
+          (input)="query.set(staySearch.value)"
+        />
+      </label>
+      <label class="field"
+        >Fecha de movimientos
+        <input
+          #day
+          type="date"
+          required
+          [value]="date()"
+          [disabled]="tab() === 'alojados'"
+          (change)="changeDate(day.value); day.value = date()"
+        />
+      </label>
+    </div>
+  </div>
+
+  <p class="notice" role="status">{{ message() }}</p>
+  <div
+    class="reception-panel records"
+    tabindex="0"
+    role="region"
+    aria-label="Movimientos de estadía"
+  >
+    @if (loading()) {
+      <div class="loading-rows" aria-label="Cargando estadías" role="status">
+        @for (row of [1, 2, 3, 4]; track row) {
+          <app-skeleton [height]="52" />
+        }
+      </div>
+    } @else {
+      @for (item of rows(); track item.id) {
+        <article class="record stay-record">
+          <div>
+            <a
+              class="record-title"
+              routerLink="/explorar/huespedes"
+              [queryParams]="{ huesped: item.guestId }"
+              >{{ item.guest }}</a
+            >
+            <small>{{ item.id }} · {{ item.guests }} adultos</small>
+            <a
+              class="contact-link"
+              routerLink="/explorar/huespedes"
+              [queryParams]="{ huesped: item.guestId }"
+              >Contactar</a
+            >
+          </div>
+          <div>
+            <small>Habitación</small><strong>{{ item.roomId }}</strong>
+          </div>
+          <div><small>Entrada</small>{{ item.start | date: 'dd/MM/yyyy' : 'UTC' }}</div>
+          <div><small>Salida</small>{{ item.end | date: 'dd/MM/yyyy' : 'UTC' }}</div>
+          <span class="badge" [attr.data-status]="item.status">{{ item.status }}</span>
+          <div class="record-action">
+            @switch (item.status) {
+              @case ('Confirmada') {
+                <button class="action primary" type="button" (click)="register(item)">
+                  Registrar check-in
+                </button>
+              }
+              @case ('Alojado') {
+                <button class="action secondary" type="button" (click)="confirmCheckout(item)">
+                  Registrar check-out
+                </button>
+              }
+              @case ('Finalizada') {
+                <a
+                  class="action secondary"
+                  routerLink="/explorar/caja"
+                  [queryParams]="{ cuenta: item.id }"
+                  >Ver cuenta</a
+                >
+              }
+              @case ('Pendiente') {
+                <a
+                  class="action secondary"
+                  routerLink="/explorar/reservaciones"
+                  [queryParams]="{ buscar: item.id }"
+                  >Ver reserva</a
+                >
+              }
+            }
+          </div>
+        </article>
+      } @empty {
+        @if (query()) {
+          <div class="empty">
+            No hay resultados para esa búsqueda.
+            <button
+              class="action secondary"
+              type="button"
+              (click)="query.set(''); staySearch.focus()"
+            >
+              Limpiar búsqueda
+            </button>
+          </div>
+        } @else {
+          <p class="empty">
+            {{
+              tab() === 'alojados'
+                ? 'No hay huéspedes alojados.'
+                : 'No hay ' + tab() + ' para la fecha elegida.'
+            }}
+          </p>
+        }
+      }
+    }
+  </div>
+</section>
+
+<dialog #checkoutDialog aria-labelledby="checkout-title" (close)="pending.set(null)">
+  @if (pending(); as item) {
+    <h2 id="checkout-title">Confirmar salida</h2>
+    <p>
+      Registra el check-out de <strong>{{ item.guest }}</strong
+      >, habitación {{ item.roomId }}.
+    </p>
+    <div class="dialog-actions">
+      <button class="action secondary" type="button" autofocus (click)="checkoutDialog.close()">
+        Volver
+      </button>
+      <button class="action primary" type="button" (click)="register(item)">
+        Confirmar check-out
+      </button>
+    </div>
+  }
+</dialog>

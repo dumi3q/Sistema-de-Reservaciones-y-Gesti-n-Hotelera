@@ -1,0 +1,80 @@
+.request-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  align-items: start;
+  gap: 14px;
+}
+
+.request-grid.staff-queue {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.request-panel,
+.request {
+  padding: 12px 15px;
+}
+
+.request-panel h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+.request-form {
+  display: grid;
+  gap: 9px;
+}
+
+.request-heading,
+.request-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.request-actions {
+  justify-content: start;
+}
+
+.field select,
+.field textarea {
+  min-height: 42px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 7px 9px;
+  border: 1px solid #c6d3c6;
+  border-radius: 7px;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+}
+
+.request {
+  border-top: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+
+.request p {
+  margin: 7px 0;
+}
+
+.request .action {
+  margin-top: 6px;
+}
+
+.badge[data-status='Resuelta'] {
+  color: #24533a;
+  background: #def0e1;
+}
+
+.badge[data-status='En curso'] {
+  color: #23505a;
+  background: #e0f0f1;
+}
+
+@media (max-width: 760px) {
+  .request-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

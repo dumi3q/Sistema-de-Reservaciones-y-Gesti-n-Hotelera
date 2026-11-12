@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SistemaHotelero.AccesoDatos.Modelo;
@@ -15,9 +15,7 @@ public partial class Habitacione
 
     public byte Piso { get; set; }
 
-    public byte EstadoOperativo { get; set; }
-
-    public bool Activo { get; set; }
+    public byte Estado { get; set; }
 
     public byte[] RowVersion { get; set; } = null!;
 
@@ -32,8 +30,6 @@ public partial class Habitacione
     public virtual ICollection<HistorialEstadosHabitacion> HistorialEstadosHabitacions { get; set; } = new List<HistorialEstadosHabitacion>();
 
     public virtual ICollection<ReservacionHabitacione> ReservacionHabitaciones { get; set; } = new List<ReservacionHabitacione>();
-
-    public virtual ICollection<ReservacionNoch> ReservacionNoches { get; set; } = new List<ReservacionNoch>();
 
     public virtual ICollection<SolicitudesServicio> SolicitudesServicios { get; set; } = new List<SolicitudesServicio>();
 

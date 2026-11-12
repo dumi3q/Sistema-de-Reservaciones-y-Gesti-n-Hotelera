@@ -1,0 +1,25 @@
+.settings {
+  max-width: 760px;
+  padding: 18px;
+}
+
+.settings h2 {
+  margin-top: 0;
+  font-size: 19px;
+}
+
+.settings-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr));
+  gap: 12px;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.settings .notice {
+  margin-top: 10px;
+}

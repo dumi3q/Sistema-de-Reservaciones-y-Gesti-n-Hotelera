@@ -1,0 +1,42 @@
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 7px 11px;
+  border: 1px solid #c6d3c6;
+  border-radius: 7px;
+  background: white;
+  color: var(--forest);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+a:hover {
+  background: #edf2e9;
+}
+
+a.current {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: white;
+}
+
+@media (max-width: 600px) {
+  nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  a {
+    padding: 5px 8px;
+  }
+}

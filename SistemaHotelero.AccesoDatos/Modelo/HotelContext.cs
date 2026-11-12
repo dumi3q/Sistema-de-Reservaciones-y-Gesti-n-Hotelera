@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -97,6 +97,24 @@ public partial class HotelContext : DbContext
 
     public virtual DbSet<Usuario> Usuarios { get; set; }
 
+    public virtual DbSet<Persona> Personas { get; set; }
+
+    public virtual DbSet<TipoDocumento> TiposDocumento { get; set; }
+
+    public virtual DbSet<TipoPenalizacion> TiposPenalizacion { get; set; }
+
+    public virtual DbSet<Descuento> Descuentos { get; set; }
+
+    public virtual DbSet<DescuentoAplicado> DescuentosAplicados { get; set; }
+
+    public virtual DbSet<ReservacionAmenidad> ReservacionAmenidades { get; set; }
+
+    public virtual DbSet<IndisponibilidadAmenidad> IndisponibilidadesAmenidad { get; set; }
+
+    public virtual DbSet<AmenidadDisponible> AmenidadesDisponibles { get; set; }
+
+    public virtual DbSet<CompensacionAmenidadPendiente> CompensacionesAmenidadPendientes { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=localhost\\SQLEXPRESS01;Initial Catalog=HotelDB;Integrated Security=True;MultipleActiveResultSets=False;Encrypt=False;TrustServerCertificate=True;");
@@ -170,6 +188,12 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<CargosCuentum>(entity =>
         {
+            entity.Property(e => e.Impuestos).HasDefaultValueSql("((0))", "DF_Cargos_Impuestos");
+            entity.Property(e => e.Descuento).HasDefaultValueSql("((0))", "DF_Cargos_Descuento");
+            entity.HasOne(e => e.TipoPenalizacion).WithMany()
+                .HasForeignKey(e => e.TipoPenalizacionId)
+                .HasConstraintName("FK_Cargos_TiposPenalizacion");
+
             entity.HasIndex(e => e.CuentaId, "IX_Cargos_Cuenta");
 
             entity.HasIndex(e => e.PedidoId, "IX_Cargos_Pedido").HasFilter("([PedidoId] IS NOT NULL)");
@@ -222,6 +246,7 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<CategoriasPlatillo>(entity =>
         {
+            entity.Property(e => e.Orden).HasDefaultValueSql("((0))", "DF_Categorias_Orden");
             entity.ToTable("CategoriasPlatillo");
 
             entity.HasIndex(e => e.Nombre, "UQ_CategoriasPlatillo_Nombre").IsUnique();
@@ -233,22 +258,20 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<Cliente>(entity =>
         {
-            entity.HasIndex(e => new { e.TipoDocumento, e.NumeroDocumento }, "UQ_Clientes_Documento").IsUnique();
+            entity.Property(e => e.PorcentajeDescuento).HasDefaultValueSql("((0))", "DF_Clientes_Descuento");
+            entity.HasIndex(e => e.PersonaId, "UQ_Clientes_Persona").IsUnique();
 
-            entity.HasIndex(e => e.Email, "UQ_Clientes_Email").IsUnique();
+            entity.HasOne(e => e.Persona).WithOne(e => e.Cliente)
+                .HasForeignKey<Cliente>(e => e.PersonaId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Clientes_Personas");
 
             entity.Property(e => e.Activo).HasDefaultValue(true, "DF_Clientes_Activo");
-            entity.Property(e => e.Apellidos).HasMaxLength(100);
-            entity.Property(e => e.Email).HasMaxLength(150);
             entity.Property(e => e.FechaRegistroUtc)
                 .HasPrecision(0)
                 .HasDefaultValueSql("(sysutcdatetime())", "DF_Clientes_FechaRegistro");
-            entity.Property(e => e.Nacionalidad).HasMaxLength(60);
-            entity.Property(e => e.Nombres).HasMaxLength(100);
-            entity.Property(e => e.NumeroDocumento).HasMaxLength(30);
             entity.Property(e => e.PorcentajeDescuento).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.Preferencias).HasMaxLength(500);
-            entity.Property(e => e.Telefono).HasMaxLength(30);
         });
 
         modelBuilder.Entity<Configuracion>(entity =>
@@ -285,7 +308,8 @@ public partial class HotelContext : DbContext
                 .HasConstraintName("FK_Cuentas_Clientes");
 
             entity.HasOne(d => d.Reservacion).WithOne(p => p.Cuenta)
-                .HasForeignKey<Cuenta>(d => d.ReservacionId)
+                .HasForeignKey<Cuenta>(d => new { d.ReservacionId, d.ClienteId })
+                .HasPrincipalKey<Reservacione>(p => new { p.Id, p.ClienteId })
                 .HasConstraintName("FK_Cuentas_Reservaciones");
         });
 
@@ -313,6 +337,7 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<DetallePedido>(entity =>
         {
+            entity.Property(e => e.Descuento).HasDefaultValueSql("((0))", "DF_DetPed_Descuento");
             entity.HasIndex(e => e.PedidoId, "IX_DetPed_Pedido");
 
             entity.HasIndex(e => e.PlatilloId, "IX_DetPed_Platillo");
@@ -381,6 +406,10 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<Factura>(entity =>
         {
+            entity.HasOne(e => e.TipoDocumentoReceptor).WithMany()
+                .HasForeignKey(e => e.TipoDocumentoReceptorId)
+                .HasConstraintName("FK_Facturas_TiposDocumento");
+
             entity.HasIndex(e => e.CuentaId, "IX_Facturas_Cuenta");
 
             entity.HasIndex(e => e.FechaEmisionUtc, "IX_Facturas_Fecha");
@@ -408,6 +437,8 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<FotosHabitacion>(entity =>
         {
+            entity.Property(e => e.EsPrincipal).HasDefaultValueSql("((0))", "DF_FotosHabitacion_Principal");
+            entity.Property(e => e.Orden).HasDefaultValueSql("((0))", "DF_FotosHabitacion_Orden");
             entity.ToTable("FotosHabitacion");
 
             entity.HasIndex(e => e.HabitacionId, "UX_FotosHabitacion_Principal")
@@ -450,8 +481,7 @@ public partial class HotelContext : DbContext
 
             entity.HasIndex(e => new { e.EdificioId, e.Numero }, "UQ_Habitaciones_Edificio_Numero").IsUnique();
 
-            entity.Property(e => e.Activo).HasDefaultValue(true, "DF_Habitaciones_Activo");
-            entity.Property(e => e.EstadoOperativo).HasDefaultValue((byte)1, "DF_Habitaciones_Estado");
+            entity.Property(e => e.Estado).HasDefaultValue((byte)1, "DF_Habitaciones_Estado");
             entity.Property(e => e.Numero).HasMaxLength(10);
             entity.Property(e => e.RowVersion)
                 .IsRowVersion()
@@ -552,6 +582,11 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<HuespedesReservacion>(entity =>
         {
+            entity.Property(e => e.EsTitular).HasDefaultValueSql("((0))", "DF_Huespedes_Titular");
+            entity.HasOne(e => e.TipoDocumento).WithMany()
+                .HasForeignKey(e => e.TipoDocumentoId)
+                .HasConstraintName("FK_Huespedes_TiposDocumento");
+
             entity.ToTable("HuespedesReservacion");
 
             entity.HasIndex(e => e.ReservacionHabitacionId, "IX_Huespedes_ResHab");
@@ -583,6 +618,7 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<NotificacionesCorreo>(entity =>
         {
+            entity.Property(e => e.Intentos).HasDefaultValueSql("((0))", "DF_Correos_Intentos");
             entity.ToTable("NotificacionesCorreo");
 
             entity.HasIndex(e => new { e.Estado, e.FechaCreacionUtc }, "IX_Correos_Pendientes").HasFilter("([Estado] IN ((1), (3)))");
@@ -641,6 +677,11 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<PedidosRestaurante>(entity =>
         {
+            entity.Property(e => e.Total).HasDefaultValueSql("((0))", "DF_Pedidos_Total");
+            entity.Property(e => e.Recargos).HasDefaultValueSql("((0))", "DF_Pedidos_Recargos");
+            entity.Property(e => e.Impuestos).HasDefaultValueSql("((0))", "DF_Pedidos_Impuestos");
+            entity.Property(e => e.Descuento).HasDefaultValueSql("((0))", "DF_Pedidos_Descuento");
+            entity.Property(e => e.Subtotal).HasDefaultValueSql("((0))", "DF_Pedidos_Subtotal");
             entity.ToTable("PedidosRestaurante");
 
             entity.HasIndex(e => new { e.ClienteId, e.FechaPedidoUtc }, "IX_Pedidos_Cliente");
@@ -740,6 +781,7 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<ReglasTarifa>(entity =>
         {
+            entity.Property(e => e.Prioridad).HasDefaultValueSql("((0))", "DF_ReglasTarifa_Prioridad");
             entity.ToTable("ReglasTarifa");
 
             entity.Property(e => e.Activo).HasDefaultValue(true, "DF_ReglasTarifa_Activo");
@@ -753,6 +795,9 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<ReservacionHabitacione>(entity =>
         {
+            entity.Property(e => e.Descuento).HasDefaultValueSql("((0))", "DF_ResHab_Descuento");
+            entity.Property(e => e.Ninos).HasDefaultValueSql("((0))", "DF_ResHab_Ninos");
+            entity.HasAlternateKey(e => new { e.Id, e.HabitacionId }).HasName("UQ_ResHab_Id_Habitacion");
             entity.HasIndex(e => new { e.HabitacionId, e.FechaInicio, e.FechaFin }, "IX_ResHab_Habitacion_Fechas");
 
             entity.HasIndex(e => e.ReservacionId, "IX_ResHab_Reservacion");
@@ -775,6 +820,7 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<ReservacionNoch>(entity =>
         {
+            entity.Property(e => e.AjusteTarifa).HasDefaultValueSql("((0))", "DF_ResNoches_Ajuste");
             entity.HasIndex(e => new { e.ReservacionHabitacionId, e.Fecha }, "UQ_ResNoches_Linea_Fecha").IsUnique();
 
             entity.HasIndex(e => new { e.HabitacionId, e.Fecha }, "UX_ResNoches_Habitacion_Fecha_Activa")
@@ -786,19 +832,22 @@ public partial class HotelContext : DbContext
             entity.Property(e => e.TarifaBase).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TarifaFinal).HasColumnType("decimal(18, 2)");
 
-            entity.HasOne(d => d.Habitacion).WithMany(p => p.ReservacionNoches)
-                .HasForeignKey(d => d.HabitacionId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_ResNoches_Habitaciones");
-
             entity.HasOne(d => d.ReservacionHabitacion).WithMany(p => p.ReservacionNoches)
-                .HasForeignKey(d => d.ReservacionHabitacionId)
+                .HasForeignKey(d => new { d.ReservacionHabitacionId, d.HabitacionId })
+                .HasPrincipalKey(p => new { p.Id, p.HabitacionId })
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ResNoches_ResHab");
         });
 
         modelBuilder.Entity<Reservacione>(entity =>
         {
+            entity.Property(e => e.AnticipoRequerido).HasDefaultValueSql("((0))", "DF_Reservaciones_Anticipo");
+            entity.Property(e => e.Total).HasDefaultValueSql("((0))", "DF_Reservaciones_Total");
+            entity.Property(e => e.Impuestos).HasDefaultValueSql("((0))", "DF_Reservaciones_Impuestos");
+            entity.Property(e => e.Descuento).HasDefaultValueSql("((0))", "DF_Reservaciones_Descuento");
+            entity.Property(e => e.Subtotal).HasDefaultValueSql("((0))", "DF_Reservaciones_Subtotal");
+            entity.Property(e => e.CantidadNinos).HasDefaultValueSql("((0))", "DF_Reservaciones_Ninos");
+            entity.HasAlternateKey(e => new { e.Id, e.ClienteId }).HasName("UQ_Reservaciones_Id_Cliente");
             entity.HasIndex(e => new { e.ClienteId, e.Estado }, "IX_Reservaciones_Cliente_Estado");
 
             entity.HasIndex(e => new { e.Estado, e.FechaExpiracionPendienteUtc }, "IX_Reservaciones_Estado_Expiracion");
@@ -960,6 +1009,7 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<TiposHabitacion>(entity =>
         {
+            entity.Property(e => e.PrecioPersonaAdicional).HasDefaultValueSql("((0))", "DF_TiposHabitacion_PrecioAdicional");
             entity.ToTable("TiposHabitacion");
 
             entity.HasIndex(e => e.Nombre, "UQ_TiposHabitacion_Nombre").IsUnique();
@@ -984,13 +1034,12 @@ public partial class HotelContext : DbContext
 
         modelBuilder.Entity<Usuario>(entity =>
         {
+            entity.Property(e => e.IntentosFallidos).HasDefaultValueSql("((0))", "DF_Usuarios_Intentos");
             entity.HasIndex(e => e.Email, "UQ_Usuarios_Email").IsUnique();
 
             entity.HasIndex(e => e.NombreUsuario, "UQ_Usuarios_NombreUsuario").IsUnique();
 
-            entity.HasIndex(e => e.ClienteId, "UX_Usuarios_ClienteId")
-                .IsUnique()
-                .HasFilter("([ClienteId] IS NOT NULL)");
+            entity.HasIndex(e => e.PersonaId, "UQ_Usuarios_Persona").IsUnique();
 
             entity.Property(e => e.Activo).HasDefaultValue(true, "DF_Usuarios_Activo");
             entity.Property(e => e.BloqueadoHastaUtc).HasPrecision(0);
@@ -1002,9 +1051,10 @@ public partial class HotelContext : DbContext
             entity.Property(e => e.PasswordHash).HasMaxLength(500);
             entity.Property(e => e.UltimoAccesoUtc).HasPrecision(0);
 
-            entity.HasOne(d => d.Cliente).WithOne(p => p.Usuario)
-                .HasForeignKey<Usuario>(d => d.ClienteId)
-                .HasConstraintName("FK_Usuarios_Clientes");
+            entity.HasOne(d => d.Persona).WithOne(p => p.Usuario)
+                .HasForeignKey<Usuario>(d => d.PersonaId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Usuarios_Personas");
 
             entity.HasMany(d => d.Rols).WithMany(p => p.Usuarios)
                 .UsingEntity<Dictionary<string, object>>(
@@ -1025,6 +1075,106 @@ public partial class HotelContext : DbContext
         });
         modelBuilder.HasSequence<int>("SeqCodigoReserva");
         modelBuilder.HasSequence<int>("SeqNumeroFactura");
+
+        modelBuilder.Entity<TipoDocumento>(entity =>
+        {
+            entity.ToTable("TiposDocumento");
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Nombre).HasMaxLength(60);
+            entity.HasIndex(e => e.Nombre).IsUnique();
+        });
+
+        modelBuilder.Entity<Persona>(entity =>
+        {
+            entity.ToTable("Personas");
+            entity.Property(e => e.NumeroDocumento).HasMaxLength(30);
+            entity.Property(e => e.Nombres).HasMaxLength(100);
+            entity.Property(e => e.Apellidos).HasMaxLength(100);
+            entity.Property(e => e.Nacionalidad).HasMaxLength(60);
+            entity.Property(e => e.EmailContacto).HasMaxLength(150);
+            entity.Property(e => e.Telefono).HasMaxLength(30);
+            entity.HasIndex(e => new { e.TipoDocumentoId, e.NumeroDocumento }, "UX_Personas_Documento")
+                .IsUnique().HasFilter("([NumeroDocumento] IS NOT NULL)");
+            entity.HasOne(e => e.TipoDocumento).WithMany().HasForeignKey(e => e.TipoDocumentoId);
+        });
+
+        modelBuilder.Entity<TipoPenalizacion>(entity =>
+        {
+            entity.ToTable("TiposPenalizacion");
+            entity.Property(e => e.Nombre).HasMaxLength(100);
+            entity.Property(e => e.MontoReferencia).HasPrecision(18, 2);
+            entity.Property(e => e.Activo).HasDefaultValue(true);
+            entity.HasIndex(e => e.Nombre).IsUnique();
+        });
+
+        modelBuilder.Entity<Descuento>(entity =>
+        {
+            entity.ToTable("Descuentos");
+            entity.Property(e => e.Nombre).HasMaxLength(100);
+            entity.Property(e => e.Valor).HasPrecision(18, 2);
+            entity.Property(e => e.Activo).HasDefaultValue(true);
+            entity.HasIndex(e => e.Nombre).IsUnique();
+        });
+
+        modelBuilder.Entity<ReservacionAmenidad>(entity =>
+        {
+            entity.ToTable("ReservacionAmenidades");
+            entity.HasKey(e => new { e.ReservacionHabitacionId, e.AmenidadId });
+            entity.HasAlternateKey(e => new { e.ReservacionHabitacionId, e.HabitacionId, e.AmenidadId });
+            entity.Property(e => e.FechaRegistroUtc).HasPrecision(0).HasDefaultValueSql("(sysutcdatetime())");
+            entity.HasOne<Amenidade>().WithMany().HasForeignKey(e => e.AmenidadId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne<ReservacionHabitacione>().WithMany()
+                .HasForeignKey(e => new { e.ReservacionHabitacionId, e.HabitacionId })
+                .HasPrincipalKey(e => new { e.Id, e.HabitacionId })
+                .OnDelete(DeleteBehavior.ClientSetNull);
+        });
+
+        modelBuilder.Entity<IndisponibilidadAmenidad>(entity =>
+        {
+            entity.ToTable("IndisponibilidadesAmenidad");
+            entity.HasAlternateKey(e => new { e.Id, e.HabitacionId, e.AmenidadId });
+            entity.HasIndex(e => new { e.HabitacionId, e.AmenidadId, e.FechaInicio, e.FechaFin },
+                "IX_IndisponibilidadesAmenidad_Busqueda");
+            entity.Property(e => e.Motivo).HasMaxLength(300);
+            entity.Property(e => e.Activo).HasDefaultValue(true);
+            entity.HasOne<Habitacione>().WithMany().HasForeignKey(e => e.HabitacionId).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne<Amenidade>().WithMany().HasForeignKey(e => e.AmenidadId).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne<Usuario>().WithMany().HasForeignKey(e => e.UsuarioId).OnDelete(DeleteBehavior.ClientSetNull);
+        });
+
+        modelBuilder.Entity<DescuentoAplicado>(entity =>
+        {
+            entity.ToTable("DescuentosAplicados");
+            entity.Property(e => e.Monto).HasPrecision(18, 2);
+            entity.Property(e => e.Motivo).HasMaxLength(300);
+            entity.Property(e => e.FechaUtc).HasPrecision(0).HasDefaultValueSql("(sysutcdatetime())");
+            entity.HasIndex(e => new { e.ReservacionHabitacionId, e.IndisponibilidadId },
+                "UX_DescuentosAplicados_Incidencia").IsUnique().HasFilter("([IndisponibilidadId] IS NOT NULL)");
+            entity.HasOne<Descuento>().WithMany().HasForeignKey(e => e.DescuentoId);
+            entity.HasOne<ReservacionHabitacione>().WithMany()
+                .HasForeignKey(e => e.ReservacionHabitacionId).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne<Usuario>().WithMany().HasForeignKey(e => e.UsuarioId).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne<ReservacionAmenidad>().WithMany()
+                .HasForeignKey(e => new { e.ReservacionHabitacionId, e.HabitacionId, e.AmenidadId })
+                .HasPrincipalKey(e => new { e.ReservacionHabitacionId, e.HabitacionId, e.AmenidadId });
+            entity.HasOne<IndisponibilidadAmenidad>().WithMany()
+                .HasForeignKey(e => new { e.IndisponibilidadId, e.HabitacionId, e.AmenidadId })
+                .HasPrincipalKey(e => new { e.Id, e.HabitacionId, e.AmenidadId });
+        });
+
+        modelBuilder.Entity<AmenidadDisponible>(entity =>
+        {
+            entity.HasNoKey();
+            entity.ToView("AmenidadesDisponibles");
+        });
+
+        modelBuilder.Entity<CompensacionAmenidadPendiente>(entity =>
+        {
+            entity.HasNoKey();
+            entity.ToView("CompensacionesAmenidadPendientes");
+            entity.Property(e => e.BaseAfectada).HasPrecision(38, 2);
+        });
 
         OnModelCreatingPartial(modelBuilder);
     }

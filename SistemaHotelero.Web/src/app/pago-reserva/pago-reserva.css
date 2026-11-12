@@ -1,0 +1,105 @@
+.payment-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.payment-panel {
+  display: grid;
+  gap: 13px;
+  padding: 18px;
+}
+
+.payment-panel h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.payment-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.card-preview {
+  display: grid;
+  gap: 15px;
+  min-height: 190px;
+  padding: 18px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #254b39, #132e26);
+  color: white;
+  box-shadow: 0 8px 20px #1c32232c;
+}
+
+.card-preview[data-brand='Visa'] {
+  background: linear-gradient(135deg, #284d80, #172e56);
+}
+
+.card-preview[data-brand='Mastercard'] {
+  background: linear-gradient(135deg, #66332e, #341c27);
+}
+
+.card-preview[data-brand='American Express'] {
+  background: linear-gradient(135deg, #32616a, #19383e);
+}
+
+.card-header,
+.payment-summary p {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.chip {
+  width: 35px;
+  height: 25px;
+  border: 1px solid #fff3c4;
+  border-radius: 5px;
+  background: repeating-linear-gradient(90deg, #c4a563 0 10px, #ebd196 11px 12px);
+}
+
+.card-digits {
+  font-family: monospace;
+  font-size: clamp(13px, 2vw, 18px);
+}
+
+.payment-summary {
+  margin-top: 14px;
+}
+
+.payment-error {
+  margin: 0;
+  color: #842e2b;
+}
+
+@media (max-width: 760px) {
+  .payment-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .payment-grid aside {
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 760px) {
+  .card-preview {
+    gap: 8px;
+    min-height: 145px;
+    padding: 12px;
+  }
+
+  .payment-panel {
+    padding: 12px;
+  }
+}

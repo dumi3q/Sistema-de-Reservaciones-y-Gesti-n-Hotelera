@@ -1,0 +1,137 @@
+<section class="page" [attr.aria-busy]="loading()" aria-labelledby="requests-title">
+  <header class="page-heading">
+    <div>
+      <h1 id="requests-title">{{ staff ? 'Solicitudes de servicio' : 'Mis solicitudes' }}</h1>
+      <p>
+        {{
+          staff
+            ? 'Asigna las solicitudes y registra cuándo quedan resueltas.'
+            : 'Pide toallas, limpieza o ayuda con tu habitación.'
+        }}
+      </p>
+    </div>
+  </header>
+  <p class="demo-note-inline">Solicitudes de prueba. Se reinician al recargar.</p>
+  <p class="notice" role="status">{{ message() }}</p>
+
+  <div class="request-grid" [class.staff-queue]="staff">
+    @if (!staff) {
+      <section class="reception-panel request-panel" aria-label="Nueva solicitud">
+        <h2>Nueva solicitud</h2>
+        @if (loading()) {
+          <app-skeleton [height]="160" />
+        } @else if (demo.stays().length) {
+          <form class="request-form" (submit)="$event.preventDefault(); submit()">
+            <label class="field"
+              >Habitación
+              <select #room [value]="stay()" (change)="stay.set(room.value)">
+                @for (item of demo.stays(); track item.id) {
+                  <option [value]="item.id">{{ item.roomId }}</option>
+                }
+              </select>
+            </label>
+            <label class="field"
+              >¿Qué necesitas?
+              <select #type required [value]="category()" (change)="category.set(type.value)">
+                <option value="">Elige un tipo de solicitud</option>
+                @for (item of demo.categories; track item) {
+                  <option [value]="item">{{ item }}</option>
+                }
+              </select>
+            </label>
+            <label class="field"
+              >Detalles
+              <textarea
+                #detail
+                required
+                rows="3"
+                maxlength="300"
+                placeholder="Ej. Necesito dos toallas adicionales"
+                [value]="notes()"
+                (input)="notes.set(detail.value)"
+              ></textarea>
+            </label>
+            <button class="action primary" type="submit">Enviar solicitud</button>
+          </form>
+        } @else {
+          <p>Podrás enviar solicitudes cuando recepción registre tu check-in.</p>
+          <a class="action secondary" routerLink="/visitar/mis-reservaciones"
+            >Ver mis reservaciones</a
+          >
+        }
+      </section>
+    }
+
+    <section class="reception-panel work-pane" aria-label="Listado de solicitudes">
+      <div class="work-heading request-heading">
+        <h2>{{ staff ? 'Solicitudes recibidas' : 'Tus solicitudes' }}</h2>
+        <label class="field"
+          >Estado
+          <select #state [value]="filter()" (change)="filter.set(state.value)">
+            @for (option of filters; track option) {
+              <option [value]="option">{{ option }}</option>
+            }
+          </select>
+        </label>
+      </div>
+      <div class="work-scroll" role="region" aria-label="Resultados de solicitudes" tabindex="0">
+        @if (loading()) {
+          <div class="loading-rows" role="status" aria-label="Cargando solicitudes">
+            <app-skeleton [height]="74" /><app-skeleton [height]="74" />
+          </div>
+        } @else {
+          @for (item of visible(); track item.id) {
+            <article class="request">
+              <div class="detail-head">
+                <div>
+                  <strong>{{ item.category }}</strong
+                  ><small>{{ item.id }} · Habitación {{ item.room }}</small>
+                </div>
+                <span class="badge" [attr.data-status]="item.status">{{ item.status }}</span>
+              </div>
+              <p>{{ item.notes }}</p>
+              @if (item.assignedTo) {
+                <small>Equipo asignado · {{ item.assignedTo }}</small>
+              }
+              @if (staff && item.status === 'Pendiente') {
+                <form
+                  class="request-actions"
+                  (submit)="$event.preventDefault(); feedback(demo.assign(item.id, team.value))"
+                >
+                  <label class="field"
+                    >Asignar equipo
+                    <select #team required>
+                      <option value="">Selecciona un equipo</option>
+                      @for (entry of demo.teams; track entry) {
+                        <option [value]="entry">{{ entry }}</option>
+                      }
+                    </select>
+                  </label>
+                  <button class="action primary" type="submit">Asignar</button>
+                </form>
+              } @else if (staff && (item.status === 'Asignada' || item.status === 'En curso')) {
+                <button
+                  class="action primary"
+                  type="button"
+                  (click)="feedback(demo.advance(item.id))"
+                >
+                  {{ item.status === 'Asignada' ? 'Iniciar atención' : 'Marcar resuelta' }}
+                </button>
+              } @else if (!staff && item.status === 'Pendiente') {
+                <button
+                  class="action secondary"
+                  type="button"
+                  (click)="feedback(demo.cancel(item.id)); filter.set('Todas')"
+                >
+                  Cancelar solicitud
+                </button>
+              }
+            </article>
+          } @empty {
+            <p class="empty">No hay solicitudes con este filtro.</p>
+          }
+        }
+      </div>
+    </section>
+  </div>
+</section>

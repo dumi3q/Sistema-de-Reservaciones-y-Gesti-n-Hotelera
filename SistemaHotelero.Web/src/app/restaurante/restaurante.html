@@ -1,0 +1,265 @@
+<section
+  class="page restaurant-page"
+  aria-labelledby="restaurant-title"
+  [attr.aria-busy]="loading()"
+>
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">RESTAURANTE · PISCINA · BAR</p>
+      <h1 id="restaurant-title">Mapa del restaurante</h1>
+    </div>
+    <span class="service-total"
+      >{{ tables().length }} mesas · {{ people() }} comensales <small>Vista de prueba</small></span
+    >
+    <div class="restaurant-actions">
+      <a class="button-primary orders-link" routerLink="/explorar/restaurante/reservas"
+        >Reservas de mesas</a
+      >
+      <a class="button-primary orders-link" routerLink="/explorar/restaurante/pedidos"
+        >Ver pedidos</a
+      >
+    </div>
+  </header>
+  <div class="attention-summary" role="group" aria-label="Estado de todas las mesas del hotel">
+    @for (status of states; track status) {
+      <button
+        type="button"
+        [class]="'attention-card ' + tone(status)"
+        [class.active]="statusFilter() === status"
+        [attr.aria-pressed]="statusFilter() === status"
+        [attr.aria-label]="status + ': ' + count(status) + ' mesas. Filtrar en todas las áreas'"
+        (click)="showStatus(status)"
+        [disabled]="loading()"
+      >
+        @if (loading()) {
+          <app-skeleton [height]="38" />
+        } @else {
+          <strong>{{ count(status).toString().padStart(2, '0') }}</strong>
+        }
+        <span
+          >{{ status
+          }}<small>{{
+            status === 'Libre'
+              ? 'Listas para recibir'
+              : status === 'Por tomar orden'
+                ? 'Necesitan atención'
+                : status === 'Por cobrar'
+                  ? 'Cuenta pendiente'
+                  : status === 'En preparación'
+                    ? 'Pedido en cocina'
+                    : 'Servicio entregado'
+          }}</small></span
+        >
+        <i aria-hidden="true"></i>
+      </button>
+    }
+  </div>
+  <p class="screen-reader-only" role="status">
+    {{ count('Libre') }} mesas libres, {{ count('Por tomar orden') }} por tomar orden y
+    {{ count('Por cobrar') }} por cobrar.
+  </p>
+  <div class="restaurant-filters">
+    <div class="area-tabs" role="group" aria-label="Filtrar por área">
+      @for (item of areas; track item) {
+        <button
+          [class.active]="area() === item"
+          [attr.aria-pressed]="area() === item"
+          (click)="chooseArea(item)"
+        >
+          {{ item }}
+        </button>
+      }
+    </div>
+    <label class="state-filter"
+      >Estado<select #state [value]="statusFilter()" (change)="filterStatus(state.value)">
+        <option>Todos</option>
+        @for (status of states; track status) {
+          <option>{{ status }}</option>
+        }
+      </select></label
+    >
+  </div>
+  @if (error()) {
+    <p class="error-message" role="alert">{{ error() }}</p>
+  }
+  <div class="restaurant-workspace">
+    <div class="floor-plan">
+      <div class="map-top">
+        <span>HOTELHUB · ÁREAS DE SERVICIO</span><span>PLANO ESQUEMÁTICO</span>
+      </div>
+      <div class="areas-grid">
+        @for (section of mapAreas; track section) {
+          <section class="map-area" [attr.aria-label]="section">
+            <header>
+              <span>{{ section }}</span>
+              <small>{{ loading() ? '–' : tablesForArea(section).length }} mesas</small>
+            </header>
+            <div class="tables-grid">
+              @if (loading()) {
+                @for (slot of section === 'Restaurante' ? [1, 2, 3, 4] : [1, 2]; track slot) {
+                  <app-skeleton class="table-slot" [height]="100" />
+                }
+              } @else {
+                @for (table of tablesForArea(section); track table.id) {
+                  <button
+                    [class]="'table-tile ' + tone(table.status)"
+                    [class.selected]="selectedId() === table.id"
+                    [class.filtered-out]="!matchingIds().has(table.id)"
+                    [attr.aria-pressed]="selectedId() === table.id"
+                    [attr.aria-label]="
+                      'Mesa ' + table.id + ', ' + table.status + ', capacidad ' + table.seats
+                    "
+                    (click)="chooseTable(table)"
+                  >
+                    <div class="table-shape" [class.round]="table.seats === 2">
+                      <i class="chair chair-top"></i><i class="chair chair-bottom"></i>
+                      @if (table.seats > 2) {
+                        <i class="chair chair-left"></i><i class="chair chair-right"></i>
+                      }
+                      <span class="table-surface"
+                        ><strong>{{ table.id }}</strong
+                        ><small>{{ table.seats }} personas</small></span
+                      >
+                    </div>
+                    <span class="table-status"><i></i>{{ table.status }}</span
+                    ><small class="table-extra">{{
+                      table.status === 'Libre'
+                        ? 'Lista para recibir'
+                        : table.people + ' comensales · ' + table.minutes + ' min'
+                    }}</small>
+                  </button>
+                }
+              }
+            </div>
+          </section>
+        }
+        @if (!loading() && !matchingIds().size && !error()) {
+          <div class="map-filter-empty">
+            <p role="status">No hay mesas con estos filtros.</p>
+            <button
+              type="button"
+              class="button-primary"
+              (click)="statusFilter.set('Todos'); area.set('Todas las áreas')"
+            >
+              Ver todas las mesas
+            </button>
+          </div>
+        }
+      </div>
+      <div class="map-bottom">
+        <span>ENTRADA PRINCIPAL</span><span>↟</span
+        ><small>Plano ilustrativo · No representa distancias reales</small>
+      </div>
+    </div>
+    <dialog
+      #detailDialog
+      class="table-dialog"
+      aria-labelledby="table-detail-title"
+      (close)="selectedId.set(null)"
+    >
+      <button
+        type="button"
+        class="close-detail"
+        aria-label="Cerrar detalle de mesa"
+        (click)="detailDialog.close()"
+      >
+        ✕
+      </button>
+      <aside class="table-detail" aria-live="polite">
+        @if (selected(); as table) {
+          <div class="table-detail-top">
+            <p class="eyebrow">UNA ATENCIÓN BIEN CUIDADA</p>
+            <div>
+              <h3 id="table-detail-title">Mesa {{ table.id }}</h3>
+              <span [class]="'detail-status ' + tone(table.status)"><i></i>{{ table.status }}</span>
+            </div>
+            <p>{{ table.area }} · Capacidad para {{ table.seats }} personas</p>
+          </div>
+          <div class="table-detail-body">
+            <div class="detail-stat">
+              <span>Comensales</span><strong>{{ table.people || '—' }}</strong>
+            </div>
+            <div class="detail-stat">
+              <span>Tiempo de visita</span><strong>{{ table.minutes }} min</strong>
+            </div>
+            <div class="guest-block">
+              <span class="guest-avatar">{{ table.guest ? table.guest.slice(0, 1) : '+' }}</span>
+              <div>
+                <strong>{{ table.guest || 'Una mesa por descubrir' }}</strong
+                ><small>{{
+                  table.guest ? 'Nombre de ejemplo' : 'Disponible para una nueva visita'
+                }}</small>
+              </div>
+            </div>
+            <h4>En la mesa</h4>
+            @if (table.order.length) {
+              <ul class="order-list">
+                @for (item of table.order; track item.name) {
+                  <li>
+                    <span class="quantity">{{ item.quantity }}×</span><span>{{ item.name }}</span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <div class="order-empty">
+                <span aria-hidden="true">♧</span>
+                <p>
+                  {{
+                    table.status === 'Libre'
+                      ? 'Todavía no hay comensales.'
+                      : 'La mesa está esperando que tomemos su orden.'
+                  }}
+                </p>
+              </div>
+            }
+            <div class="attention-tip">
+              <span>✧</span>
+              <p>
+                {{
+                  table.status === 'Por tomar orden'
+                    ? 'Es un buen momento para acercarse, dar la bienvenida y tomar la orden.'
+                    : table.status === 'Por cobrar'
+                      ? 'Los comensales están listos para cerrar su visita.'
+                      : table.status === 'En preparación'
+                        ? 'El pedido está en cocina. Mantén informados a tus comensales.'
+                        : table.status === 'Atendida'
+                          ? 'Todo está servido. Un pequeño seguimiento hace la diferencia.'
+                          : 'Todo preparado para una nueva experiencia.'
+                }}
+              </p>
+            </div>
+            @if (table.status === 'Por cobrar') {
+              <a
+                class="button-primary table-action"
+                routerLink="/explorar/caja"
+                [queryParams]="{ cuenta: table.id }"
+                (click)="detailDialog.close()"
+              >
+                Abrir cuenta en Caja <span aria-hidden="true">→</span>
+              </a>
+            } @else {
+              <a
+                class="button-primary table-action"
+                routerLink="/explorar/restaurante/pedidos"
+                [queryParams]="{ mesa: table.id }"
+                (click)="detailDialog.close()"
+              >
+                {{ table.status === 'Libre' ? 'Abrir servicio' : 'Gestionar comanda' }}
+                <span aria-hidden="true">→</span>
+              </a>
+            }
+            <p class="simulation-note">
+              Los cambios de prueba se comparten con Pedidos y Caja durante esta sesión.
+            </p>
+          </div>
+        } @else {
+          <div class="map-empty">
+            <span>♧</span>
+            <h3>El servicio empieza aquí.</h3>
+            <p>Selecciona una mesa para consultar su estado y su comanda.</p>
+          </div>
+        }
+      </aside>
+    </dialog>
+  </div>
+</section>

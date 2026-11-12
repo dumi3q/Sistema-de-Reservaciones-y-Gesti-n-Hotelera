@@ -1,0 +1,102 @@
+<main class="login-shell">
+  <section class="form-panel">
+    <a class="brand" routerLink="/visitar" aria-label="HotelHub, inicio"
+      ><span class="brand-icon">H</span> HotelHub<span class="brand-caption"
+        >HOSPITALITY SUITE</span
+      ></a
+    >
+    <div class="form-content">
+      <p class="eyebrow">CADA DETALLE CUENTA</p>
+      <h1>Iniciar sesión</h1>
+      <p class="intro">
+        Accede a tu cuenta para gestionar tus reservaciones y disfrutar cada detalle.
+      </p>
+      @if (reservationContext) {
+        <p class="access-context">
+          Tu selección sigue disponible en el resumen.
+          <a routerLink="/visitar/confirmar-reserva" queryParamsHandling="preserve"
+            >Volver al resumen</a
+          >
+        </p>
+      }
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <label for="email">Correo electrónico</label>
+        <div class="input-wrap">
+          <span aria-hidden="true">&#64;</span
+          ><input
+            id="email"
+            type="email"
+            autocomplete="username"
+            placeholder="nombre@correo.com"
+            formControlName="email"
+            [attr.aria-invalid]="form.controls.email.touched && form.controls.email.invalid"
+            aria-describedby="email-error"
+          />
+        </div>
+        <small id="email-error" class="field-error">
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            Ingresa un correo electrónico válido.
+          }
+        </small>
+        <label for="password">Contraseña</label>
+        <div class="input-wrap">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            aria-hidden="true"
+          >
+            <rect x="5" y="10" width="14" height="11" rx="3" />
+            <path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg
+          ><input
+            id="password"
+            [type]="visible() ? 'text' : 'password'"
+            autocomplete="current-password"
+            placeholder="Tu contraseña"
+            formControlName="password"
+            [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid"
+            aria-describedby="password-error"
+          /><button
+            type="button"
+            class="reveal"
+            (click)="visible.set(!visible())"
+            [attr.aria-label]="visible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            {{ visible() ? 'Ocultar' : 'Ver' }}
+          </button>
+        </div>
+        <small id="password-error" class="field-error">
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            Ingresa tu contraseña.
+          }
+        </small>
+        <button class="primary" type="submit" [disabled]="loading()" [attr.aria-busy]="loading()">
+          @if (loading()) {
+            <span class="spinner"></span> Comprobando acceso…
+          } @else {
+            Iniciar sesión <span aria-hidden="true">↗</span>
+          }
+        </button>
+        <p class="notice" role="status">{{ message() }}</p>
+      </form>
+      <p class="signup-prompt">
+        ¿Es tu primera visita?
+        <a routerLink="/registro" queryParamsHandling="preserve">Crear cuenta</a>
+      </p>
+      <div class="divider"><span>O empieza a descubrir</span></div>
+      <button class="preview-button" (click)="explore()" [disabled]="loading()">
+        Continuar como invitado <span aria-hidden="true">→</span>
+      </button>
+      <p class="guest-help">
+        Explora habitaciones y menú sin iniciar sesión. Te pediremos una cuenta cuando quieras
+        reservar.
+      </p>
+      <a class="staff-preview" routerLink="/explorar/inicio">Vista de prueba del personal ↗</a>
+    </div>
+    <footer><span>© 2026 HotelHub</span><a routerLink="/visitar">Volver al hotel</a></footer>
+  </section>
+  <app-auth-carousel />
+</main>

@@ -1,0 +1,59 @@
+.booking-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.booking-facts {
+  padding: 12px 15px;
+}
+
+.booking-facts dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+}
+
+.booking-facts dt {
+  color: var(--muted);
+}
+
+.booking-facts dd {
+  margin: 0;
+  font-weight: 650;
+}
+
+.cancel-action {
+  border-color: #a55f56;
+  background: #fff7f4;
+  color: #842e2b;
+}
+
+dialog {
+  width: min(460px, calc(100% - 32px));
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--ink);
+}
+
+dialog::backdrop {
+  background: #182a21a6;
+}
+
+dialog h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+@media (max-width: 720px) {
+  .work-grid .work-pane {
+    block-size: clamp(310px, 53dvh, 460px);
+  }
+
+  .work-grid.show-detail .booking-list,
+  .work-grid:not(.show-detail) .booking-detail {
+    display: none;
+  }
+}

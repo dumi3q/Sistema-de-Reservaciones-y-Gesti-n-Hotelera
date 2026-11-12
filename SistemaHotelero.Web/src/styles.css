@@ -1,0 +1,65 @@
+:root {
+  --forest: #304b3d;
+  --cream: #f8f8f2;
+  --gold: #b59969;
+  --ink: #273b30;
+  --muted: #5b6955;
+  --border: #e2e7dc;
+  --font-ui: 'Segoe UI', Arial, sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #e8ede7;
+  padding: 1px 25px;
+  min-width: 320px;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+}
+button,
+input {
+  font-family: var(--font-ui);
+}
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+}
+::selection {
+  background: #d9e1ce;
+}
+@media (max-width: 720px) {
+  body {
+    padding: 0;
+  }
+}
+
+@media (min-width: 851px) {
+  html {
+    scrollbar-gutter: stable both-edges;
+  }
+}
+
+@media print {
+  body:has(app-facturas, app-reportes) {
+    padding: 0;
+    background: white;
+  }
+
+  body:has(app-facturas, app-reportes) :is(.sidebar, .topbar, .workspace-footer, .no-print) {
+    display: none !important;
+  }
+
+  body:has(app-facturas, app-reportes) :is(.workspace, .workspace-body, .workspace-content) {
+    display: block;
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+    border: 0;
+    box-shadow: none;
+    background: white;
+    overflow: visible;
+  }
+}

@@ -1,0 +1,161 @@
+<section class="page" aria-labelledby="room-orders-title" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <h1 id="room-orders-title">{{ staff ? 'Pedidos a habitación' : 'Mis pedidos' }}</h1>
+      <p>
+        {{
+          staff
+            ? 'Gestiona los pedidos enviados desde las habitaciones.'
+            : 'Revisa tu carrito y consulta el estado de tus pedidos.'
+        }}
+      </p>
+    </div>
+    <a
+      class="action secondary"
+      [routerLink]="staff ? '/explorar/restaurante/pedidos' : '/visitar/servicio-habitacion'"
+    >
+      {{ staff ? 'Ver comandas de mesa' : 'Volver a servicio a la habitación' }}
+    </a>
+  </header>
+  <p class="demo-note-inline">
+    Pedidos de prueba en USD. El cargo se registra en la cuenta de la habitación al entregar.
+  </p>
+  <p class="notice" role="status">{{ message() }}</p>
+  <div class="orders-grid" [class.queue]="staff">
+    @if (!staff) {
+      <section class="reception-panel work-pane" aria-label="Carrito">
+        <div class="work-heading">
+          <h2>Carrito · {{ demo.count() }}</h2>
+        </div>
+        <div class="work-scroll" tabindex="0" role="region" aria-label="Platillos del carrito">
+          @if (loading()) {
+            <div class="loading-rows">
+              <app-skeleton [height]="52" /><app-skeleton [height]="52" />
+            </div>
+          } @else {
+            @for (line of demo.cart(); track line.id) {
+              <div class="line-item">
+                <div>
+                  <strong>{{ line.label }}</strong
+                  ><small>{{
+                    line.available ? (line.unitCents / 100 | currency: 'USD') : 'Agotado'
+                  }}</small>
+                </div>
+                <div class="quantity">
+                  <button
+                    class="action secondary"
+                    type="button"
+                    [attr.aria-label]="'Quitar ' + line.label"
+                    (click)="demo.adjust(line.id, -1)"
+                  >
+                    −
+                  </button>
+                  <span>{{ line.quantity }}</span>
+                  <button
+                    class="action secondary"
+                    type="button"
+                    [disabled]="!line.available || line.quantity === 99"
+                    [attr.aria-label]="'Agregar ' + line.label"
+                    (click)="demo.adjust(line.id, 1)"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <p class="empty">Agrega platillos desde el menú para preparar tu pedido.</p>
+            }
+          }
+        </div>
+        @if (!loading() && demo.cart().length) {
+          <div class="work-footer">
+            <p class="work-total">
+              Subtotal <strong>{{ cartTotal() | currency: 'USD' }}</strong>
+            </p>
+            @if (demo.activeStays().length) {
+              <label class="field"
+                >Habitación
+                <select #room [value]="stayId()" (change)="stayId.set(room.value)">
+                  @for (stay of demo.activeStays(); track stay.id) {
+                    <option [value]="stay.id">{{ stay.roomId }}</option>
+                  }
+                </select>
+              </label>
+              <button
+                class="action primary"
+                type="button"
+                [disabled]="unavailable()"
+                (click)="submit()"
+              >
+                Enviar pedido
+              </button>
+              @if (unavailable()) {
+                <small>Quita los platillos agotados para continuar.</small>
+              }
+            } @else {
+              <p class="checkout-note">
+                El servicio a habitación se habilita después del check-in en recepción.
+                <a routerLink="/visitar/mis-reservaciones">Ver mis reservaciones</a>
+              </p>
+            }
+          </div>
+        }
+      </section>
+    }
+
+    <section class="reception-panel work-pane" aria-label="Pedidos a habitación">
+      <div class="work-heading">
+        <h2>{{ staff ? 'Cola de pedidos' : 'Historial de pedidos' }}</h2>
+      </div>
+      <div class="work-scroll" tabindex="0" role="region" aria-label="Listado de pedidos">
+        @if (loading()) {
+          <div class="loading-rows" role="status" aria-label="Cargando pedidos">
+            <app-skeleton [height]="72" /><app-skeleton [height]="72" />
+          </div>
+        } @else {
+          @for (order of demo.orders(); track order.id) {
+            <article class="order-card">
+              <div class="detail-head">
+                <div>
+                  <strong>{{ order.id }}</strong
+                  ><small>Habitación {{ order.room }}</small>
+                </div>
+                <span class="badge" [attr.data-status]="order.status">{{ order.status }}</span>
+              </div>
+              <ul>
+                @for (line of order.lines; track $index) {
+                  <li>{{ line.quantity }} × {{ line.label }}</li>
+                }
+              </ul>
+              <p>
+                Subtotal <strong>{{ total(order.lines) / 100 | currency: 'USD' }}</strong>
+              </p>
+              @if (staff && order.status !== 'Entregado' && order.status !== 'Cancelado') {
+                <div class="order-actions">
+                  <button class="action primary" type="button" (click)="advance(order.id)">
+                    {{
+                      order.status === 'Recibido'
+                        ? 'Empezar preparación'
+                        : order.status === 'Listo'
+                          ? 'Confirmar entrega y cargo'
+                          : 'Marcar listo'
+                    }}
+                  </button>
+                  <button class="action secondary" type="button" (click)="cancel(order.id)">
+                    Cancelar pedido
+                  </button>
+                </div>
+              } @else if (!staff && order.status === 'Recibido') {
+                <button class="action secondary" type="button" (click)="cancel(order.id)">
+                  Cancelar pedido
+                </button>
+              }
+            </article>
+          } @empty {
+            <p class="empty">Todavía no hay pedidos a habitación.</p>
+          }
+        }
+      </div>
+    </section>
+  </div>
+</section>

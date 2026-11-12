@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SistemaHotelero.AccesoDatos.Modelo;
@@ -7,7 +7,7 @@ public partial class Usuario
 {
     public int Id { get; set; }
 
-    public int? ClienteId { get; set; }
+    public int PersonaId { get; set; }
 
     public string NombreUsuario { get; set; } = null!;
 
@@ -33,7 +33,7 @@ public partial class Usuario
 
     public virtual ICollection<CargosCuentum> CargosCuentumUsuarios { get; set; } = new List<CargosCuentum>();
 
-    public virtual Cliente? Cliente { get; set; }
+    public virtual Persona Persona { get; set; } = null!;
 
     public virtual ICollection<Estadia> EstadiaUsuarioCheckIns { get; set; } = new List<Estadia>();
 

@@ -1,0 +1,29 @@
+.audit-filters {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+  flex-wrap: wrap;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.audit-filters p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.audit-event {
+  grid-template-columns: minmax(140px, 1fr) minmax(0, 1.5fr) minmax(145px, 1fr);
+  overflow-wrap: anywhere;
+}
+
+.audit-event p {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .audit-event {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+}

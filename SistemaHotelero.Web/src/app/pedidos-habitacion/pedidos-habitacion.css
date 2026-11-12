@@ -1,0 +1,61 @@
+.orders-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.orders-grid.queue {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.quantity,
+.order-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.quantity {
+  flex-wrap: nowrap;
+}
+
+.quantity button {
+  min-width: 42px;
+}
+
+.order-card {
+  border-top: 1px solid var(--border);
+  padding: 12px 15px;
+}
+
+.order-card ul {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.order-card p,
+.checkout-note {
+  margin: 8px 0;
+}
+
+.field select {
+  min-height: 42px;
+  padding: 7px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--ink);
+  background: white;
+}
+
+.badge[data-status='Entregado'],
+.badge[data-status='Listo'] {
+  background: #def0e1;
+  color: #24533a;
+}
+
+@media (max-width: 720px) {
+  .orders-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SistemaHotelero.AccesoDatos.Modelo;
@@ -6,6 +6,10 @@ namespace SistemaHotelero.AccesoDatos.Modelo;
 public partial class Factura
 {
     public int Id { get; set; }
+
+    public byte? TipoDocumentoReceptorId { get; set; }
+
+    public virtual TipoDocumento? TipoDocumentoReceptor { get; set; }
 
     public int CuentaId { get; set; }
 

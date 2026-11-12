@@ -1,0 +1,59 @@
+.access-toolbar,
+.access-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.access-toolbar {
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.active-filter {
+  min-height: 30px;
+  font-size: 14px;
+}
+
+fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+legend {
+  padding-inline: 4px;
+  font-weight: 650;
+}
+
+.option {
+  padding: 4px 0;
+  font-size: 14px;
+}
+
+.option + .option {
+  border-top: 1px solid var(--border);
+}
+
+.option input {
+  flex: 0 0 18px;
+}
+
+.role-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (max-width: 720px) {
+  .work-grid.editing .directory,
+  .work-grid:not(.editing) .editor {
+    display: none;
+  }
+
+  .work-grid .work-pane {
+    block-size: clamp(380px, 62dvh, 540px);
+  }
+}

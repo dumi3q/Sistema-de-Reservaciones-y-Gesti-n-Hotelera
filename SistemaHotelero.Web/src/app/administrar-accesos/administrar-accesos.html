@@ -1,0 +1,244 @@
+<section class="page" aria-labelledby="access-title" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">ADMINISTRACIÓN</p>
+      <h1 id="access-title">Usuarios, roles y permisos</h1>
+      <p>Organiza las cuentas del personal y los permisos de cada rol.</p>
+    </div>
+  </header>
+  <app-admin-nav />
+  <p class="demo-note-inline">
+    Configuración de prueba. Los cambios se reinician al recargar y el acceso real se gestiona en la
+    API.
+  </p>
+
+  <div class="access-toolbar">
+    <div class="access-tabs" role="group" aria-label="Tipo de registro">
+      <button
+        class="action"
+        type="button"
+        [class.primary]="tab() === 'users'"
+        [class.secondary]="tab() !== 'users'"
+        [attr.aria-pressed]="tab() === 'users'"
+        (click)="switchTab('users')"
+      >
+        Usuarios
+      </button>
+      <button
+        class="action"
+        type="button"
+        [class.primary]="tab() === 'roles'"
+        [class.secondary]="tab() !== 'roles'"
+        [attr.aria-pressed]="tab() === 'roles'"
+        (click)="switchTab('roles')"
+      >
+        Roles y permisos
+      </button>
+    </div>
+    <button class="action primary" type="button" [disabled]="loading()" (click)="newRecord()">
+      {{ tab() === 'users' ? 'Nuevo usuario' : 'Nuevo rol' }}
+    </button>
+  </div>
+
+  <div class="work-grid" [class.editing]="editing()">
+    <section class="reception-panel work-pane directory" aria-label="Registros de acceso">
+      <div class="work-heading admin-filters">
+        <label class="field"
+          >{{ tab() === 'users' ? 'Buscar usuario' : 'Buscar rol' }}
+          <input
+            #search
+            type="search"
+            [value]="query()"
+            [placeholder]="tab() === 'users' ? 'Usuario, correo o rol' : 'Nombre del rol'"
+            (input)="query.set(search.value)"
+          />
+        </label>
+        @if (tab() === 'users') {
+          <label class="check active-filter"
+            ><input
+              #activeFilter
+              type="checkbox"
+              [checked]="activeOnly()"
+              (change)="activeOnly.set(activeFilter.checked)"
+            />
+            Solo activos</label
+          >
+        }
+      </div>
+      <div class="work-scroll" tabindex="0" role="region" aria-label="Resultados">
+        @if (loading()) {
+          <div class="loading-rows" role="status" aria-label="Cargando configuración">
+            @for (row of [1, 2, 3, 4]; track row) {
+              <app-skeleton [height]="46" />
+            }
+          </div>
+        } @else if (tab() === 'users') {
+          @for (user of filteredUsers(); track user.id) {
+            <button
+              class="work-choice"
+              type="button"
+              [attr.aria-pressed]="editing() && userId() === user.id"
+              (click)="editUser(user)"
+            >
+              <span
+                ><strong>{{ user.username }}</strong
+                ><small>{{ roleNames(user) }}</small></span
+              >
+              <span class="badge" [attr.data-status]="user.active ? 'Alojado' : 'Cancelada'">{{
+                user.active ? 'Activo' : 'Inactivo'
+              }}</span>
+            </button>
+          } @empty {
+            <p class="empty">No encontramos usuarios con esos filtros.</p>
+          }
+        } @else {
+          @for (role of filteredRoles(); track role.id) {
+            <button
+              class="work-choice"
+              type="button"
+              [attr.aria-pressed]="editing() && roleId() === role.id"
+              (click)="editRole(role)"
+            >
+              <span
+                ><strong>{{ role.id === demo.guestRoleId ? 'Huésped' : role.name }}</strong
+                ><small>{{ role.permissions.length }} permisos</small></span
+              >
+            </button>
+          } @empty {
+            <p class="empty">No encontramos roles con esa búsqueda.</p>
+          }
+        }
+      </div>
+    </section>
+
+    <section class="reception-panel work-pane editor" aria-label="Detalle de acceso">
+      @if (loading()) {
+        <div class="loading-rows">
+          <app-skeleton [height]="52" /><app-skeleton [height]="95" /><app-skeleton [height]="95" />
+        </div>
+      } @else if (!editing()) {
+        <p class="empty">
+          {{
+            tab() === 'users'
+              ? 'Selecciona un usuario para editarlo.'
+              : 'Selecciona un rol para ver sus permisos.'
+          }}
+        </p>
+      } @else if (tab() === 'users') {
+        <div class="work-heading">
+          <h2>{{ userId() === null ? 'Nuevo usuario' : 'Editar usuario' }}</h2>
+        </div>
+        <form class="admin-form" [formGroup]="userForm" (ngSubmit)="saveUser()">
+          <div class="work-scroll form-fields">
+            <label class="field"
+              >Nombre de usuario<input type="text" maxlength="50" formControlName="username"
+            /></label>
+            <label class="field"
+              >Correo<input type="email" maxlength="150" formControlName="email"
+            /></label>
+            <label class="check"
+              ><input type="checkbox" formControlName="active" /> Cuenta activa</label
+            >
+            <fieldset>
+              <legend>Roles del personal</legend>
+              @for (role of staffRoles(); track role.id) {
+                <label class="check option">
+                  <input
+                    #assigned
+                    type="checkbox"
+                    [checked]="userForm.controls.roleIds.value.includes(role.id)"
+                    (change)="toggle(userForm.controls.roleIds, role.id, assigned.checked)"
+                  />
+                  {{ role.name }}
+                </label>
+              }
+            </fieldset>
+          </div>
+          <div class="work-footer">
+            <button class="action primary" type="submit">Guardar usuario</button>
+            <button class="action secondary" type="button" (click)="closeEditor()">
+              Volver al listado
+            </button>
+            <ng-container [ngTemplateOutlet]="feedback" />
+          </div>
+        </form>
+      } @else {
+        <div class="work-heading detail-head">
+          <h2>{{ roleId() === null ? 'Nuevo rol' : 'Permisos del rol' }}</h2>
+          <span class="badge">{{ roleForm.controls.permissions.value.length }} asignados</span>
+        </div>
+        <form class="admin-form" [formGroup]="roleForm" (ngSubmit)="saveRole()">
+          <div class="work-scroll form-fields">
+            <label class="field"
+              >Nombre del rol<input
+                type="text"
+                maxlength="50"
+                formControlName="name"
+                [readOnly]="locked()"
+            /></label>
+            <label class="field"
+              >Descripción<textarea
+                rows="2"
+                maxlength="200"
+                formControlName="description"
+                [readOnly]="locked()"
+              ></textarea>
+            </label>
+            @if (locked()) {
+              <p class="role-note">Administrador tiene todos los permisos de la demo.</p>
+            }
+            <label class="field"
+              >Buscar permisos
+              <input
+                #permissionSearch
+                type="search"
+                [value]="permissionQuery()"
+                placeholder="Código o acción"
+                (input)="permissionQuery.set(permissionSearch.value)"
+              />
+            </label>
+            @for (group of visiblePermissions(); track group[0]) {
+              <fieldset>
+                <legend>{{ group[0] }}</legend>
+                @for (permission of group[1]; track permission.code) {
+                  <label class="check option">
+                    <input
+                      #allowed
+                      type="checkbox"
+                      [disabled]="locked()"
+                      [checked]="roleForm.controls.permissions.value.includes(permission.code)"
+                      (change)="
+                        toggle(roleForm.controls.permissions, permission.code, allowed.checked)
+                      "
+                    />
+                    <span
+                      >{{ permission.description }}<small>{{ permission.code }}</small></span
+                    >
+                  </label>
+                }
+              </fieldset>
+            } @empty {
+              <p class="role-note">No encontramos permisos con esa búsqueda.</p>
+            }
+          </div>
+          <div class="work-footer">
+            @if (!locked()) {
+              <button class="action primary" type="submit">Guardar rol</button>
+            }
+            <button class="action secondary" type="button" (click)="closeEditor()">
+              Volver al listado
+            </button>
+            <ng-container [ngTemplateOutlet]="feedback" />
+          </div>
+        </form>
+      }
+    </section>
+  </div>
+</section>
+
+<ng-template #feedback>
+  <p class="form-message" role="status">{{ notice() }}</p>
+  @if (error()) {
+    <p class="form-error" role="alert">{{ error() }}</p>
+  }
+</ng-template>

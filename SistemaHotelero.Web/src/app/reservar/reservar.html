@@ -1,0 +1,258 @@
+<section class="page" aria-labelledby="page-title" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">ENCUENTRA TU PRÓXIMA ESTANCIA</p>
+      <h1 id="page-title">Disponibilidad de habitaciones</h1>
+      <p>Elige fechas y compara las habitaciones disponibles.</p>
+    </div>
+    <span class="heading-symbol" aria-hidden="true">⌂</span>
+  </header>
+  @if (!publicMode) {
+    <p><a routerLink="/explorar/reservaciones">← Volver a reservaciones</a></p>
+  }
+  <div class="demo-note-inline">
+    <span>✧</span> Vista de prueba · 4 edificios, 6 pisos y 96 habitaciones. Disponibilidad e
+    imágenes de ejemplo.
+  </div>
+  <form class="search-panel" [formGroup]="filterForm" (ngSubmit)="search()">
+    <label>Entrada<input type="date" formControlName="start" required /></label
+    ><span class="date-arrow" aria-hidden="true">→</span
+    ><label>Salida<input type="date" formControlName="end" required /></label
+    ><label
+      >Adultos<select formControlName="guests">
+        <option [ngValue]="1">1 adulto</option>
+        <option [ngValue]="2">2 adultos</option>
+        <option [ngValue]="3">3 adultos</option>
+        <option [ngValue]="4">4 adultos</option>
+      </select></label
+    ><button class="button-primary" type="submit" [disabled]="loading()">
+      Consultar disponibilidad <span aria-hidden="true">↗</span>
+    </button>
+  </form>
+  <div class="availability-feedback" [class.no-availability]="searched() && !totalAvailable()">
+    @if (error()) {
+      <p role="alert">{{ error() }}</p>
+    } @else {
+      <p role="status">
+        @if (loading()) {
+          Cargando disponibilidad…
+        } @else if (searched()) {
+          @if (totalAvailable(); as count) {
+            <strong
+              >{{ count }}
+              {{ count === 1 ? 'habitación disponible' : 'habitaciones disponibles' }}</strong
+            >
+            para las fechas seleccionadas. Abajo puedes elegir edificio, piso y habitación.
+          } @else {
+            <strong>No hay habitaciones disponibles.</strong> Prueba otras fechas o una cantidad
+            distinta de adultos.
+          }
+        } @else {
+          Consulta la disponibilidad para tus fechas y la cantidad de adultos.
+        }
+      </p>
+    }
+  </div>
+  <div class="section-heading">
+    <div>
+      <span class="step">01</span>
+      <h2>Elige tu edificio</h2>
+    </div>
+    <span class="section-meta">
+      @if (!loading()) {
+        <b>{{ totalAvailable() }}</b> disponibles en el hotel
+      }
+    </span>
+  </div>
+  <div class="building-grid">
+    @if (loading()) {
+      @for (item of buildings; track item.code) {
+        <app-skeleton [height]="72" />
+      }
+    } @else {
+      @for (item of buildings; track item.code) {
+        <button
+          class="building-card"
+          [class.selected]="building() === item.code"
+          [attr.aria-pressed]="building() === item.code"
+          (click)="chooseBuilding(item.code)"
+        >
+          <strong>{{ item.name }}</strong>
+          <small>{{ buildingAvailable(item) }} disponibles</small>
+        </button>
+      }
+    }
+  </div>
+  <div class="section-heading">
+    <div>
+      <span class="step">02</span>
+      <h2>Selecciona el piso</h2>
+    </div>
+    <span class="section-meta">{{ currentBuilding().name }}</span>
+  </div>
+  <div class="floor-grid">
+    @for (level of floors; track level) {
+      <button
+        class="floor-button"
+        [class.selected]="floor() === level"
+        [attr.aria-pressed]="floor() === level"
+        [disabled]="loading()"
+        (click)="chooseFloor(level)"
+      >
+        <span
+          >Piso <b>{{ level.toString().padStart(2, '0') }}</b></span
+        ><small>
+          @if (loading()) {
+            Cargando…
+          } @else {
+            <i [class.full]="floorAvailable(level) === 0"></i
+            >{{ floorAvailable(level) }} disponibles
+          }
+        </small>
+      </button>
+    }
+  </div>
+  <div class="section-heading">
+    <div>
+      <span class="step">03</span>
+      <h2>Encuentra tu habitación</h2>
+    </div>
+    <span class="section-meta"
+      >{{ currentBuilding().name }} <span class="separator">/</span> Piso {{ floor() }}</span
+    >
+  </div>
+  <div class="room-workspace">
+    <section class="rooms-panel" aria-label="Habitaciones del piso seleccionado">
+      <div class="room-panel-heading">
+        <span>PLANO DEL PISO {{ floor().toString().padStart(2, '0') }}</span
+        ><span>{{ floorAvailable(floor()) }} de 4 disponibles</span>
+      </div>
+      <div class="room-grid">
+        @if (loading()) {
+          @for (item of [1, 2, 3, 4]; track item) {
+            <app-skeleton [height]="155" />
+          }
+        } @else {
+          @for (room of floorRooms(); track room.id) {
+            <button
+              class="room-card"
+              [class.selected]="selectedRoomId() === room.id"
+              [class.unavailable]="!available(room)"
+              [attr.aria-pressed]="selectedRoomId() === room.id"
+              (click)="chooseRoom(room, true)"
+            >
+              <div>
+                <span class="room-number">{{ room.number }}</span
+                ><span aria-hidden="true">⌂</span>
+              </div>
+              <strong>{{ room.type }}</strong
+              ><small>{{ room.adults }} adultos · hasta {{ room.children }} niños</small
+              ><span class="room-state" [class.is-unavailable]="!available(room)"
+                ><i></i>{{ status(room) }}</span
+              >
+            </button>
+          }
+        }
+      </div>
+      <div class="hallway">
+        <span>ASCENSOR</span>
+        <div></div>
+        <span>PASILLO CENTRAL</span>
+        <div></div>
+        <span>ESCALERAS</span>
+      </div>
+      <div class="room-legend">
+        <span><i></i> Disponible</span><span><i class="unavailable-dot"></i> No disponible</span
+        ><span>Selecciona una habitación para ver sus detalles →</span>
+      </div>
+    </section>
+    <aside #roomDetail class="room-detail" tabindex="-1" aria-label="Detalle de habitación">
+      @if (selectedRoom(); as room) {
+        <div class="detail-content">
+          <span class="detail-location">{{ currentBuilding().name }} · Piso {{ room.floor }}</span>
+          <h3>
+            {{ room.type }} <span>{{ room.id }}</span>
+          </h3>
+
+          <div class="room-facts">
+            <span>{{ room.area }} m²</span><span>{{ room.adults }} adultos</span
+            ><span>Hasta {{ room.children }} niños</span>
+          </div>
+          <div class="price-row">
+            <div>
+              <strong>{{ demo.quoteRoomPrice(room, dates().start) | currency: 'USD' }}</strong
+              ><span> / noche</span>
+            </div>
+            <span>{{ nights() }} noches seleccionadas</span>
+          </div>
+          <div class="estimate">
+            <span>Hospedaje de referencia</span
+            ><b>{{ demo.quoteRoomPrice(room, dates().start) * nights() | currency: 'USD' }}</b>
+          </div>
+          <p class="price-note">
+            Tarifa base de ejemplo. Impuestos, descuentos y disponibilidad final se validarán con la
+            API.
+          </p>
+          <button
+            class="button-primary reserve-button"
+            [disabled]="!available(room)"
+            (click)="selectForReservation(room)"
+          >
+            {{ available(room) ? 'Elegir esta habitación' : status(room) }}
+            <span aria-hidden="true">→</span>
+          </button>
+          <details class="room-more">
+            <summary>Ver fotos y amenidades</summary>
+            <div class="photo-frame">
+              <span class="photo-fallback"
+                >⌂<small>{{ room.type }} · Foto de referencia</small></span
+              >
+              @if (room.photos.length) {
+                <img
+                  [src]="room.photos[photoIndex()]"
+                  [alt]="'Foto de referencia ' + (photoIndex() + 1) + ' de ' + room.type"
+                  (error)="hideBrokenPhoto($event)"
+                  (load)="showPhoto($event)"
+                />
+              }
+              <span class="photo-label">FOTO DE REFERENCIA</span>
+              @if (room.photos.length) {
+                <span class="photo-count">{{ photoIndex() + 1 }} / {{ room.photos.length }}</span>
+              }
+            </div>
+            <div class="photo-tabs">
+              @for (photo of room.photos; track photo; let index = $index) {
+                <button
+                  (click)="photoIndex.set(index)"
+                  [class.active]="photoIndex() === index"
+                  [attr.aria-label]="'Ver foto ' + (index + 1)"
+                  [attr.aria-pressed]="photoIndex() === index"
+                >
+                  {{ index + 1 }}
+                </button>
+              }
+            </div>
+            <h4>Amenidades</h4>
+            <div class="amenities">
+              @for (amenity of room.amenities; track amenity) {
+                <span>✓ {{ amenity }}</span>
+              }
+            </div>
+          </details>
+        </div>
+      } @else {
+        <div class="detail-empty">
+          <span>✧</span>
+          <p class="eyebrow">TU ESTANCIA EMPIEZA AQUÍ</p>
+          <h3>Conoce cada detalle.</h3>
+          <p>
+            Selecciona una habitación del plano para descubrir sus fotos, amenidades y tarifa por
+            noche.
+          </p>
+          <div class="empty-line"></div>
+          <small>También puedes consultar las habitaciones no disponibles.</small>
+        </div>
+      }
+    </aside>
+  </div>
+</section>

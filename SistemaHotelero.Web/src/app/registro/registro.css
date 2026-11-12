@@ -1,0 +1,30 @@
+.form-content {
+  max-width: 420px;
+  padding: 30px 0;
+}
+h1 {
+  font-size: 32px;
+}
+.intro {
+  margin-bottom: 24px;
+}
+.name-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.name-fields > div {
+  min-width: 0;
+}
+.field-error {
+  min-height: 26px;
+}
+@media (max-width: 450px) {
+  .name-fields {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .form-content {
+    padding-top: 30px;
+  }
+}

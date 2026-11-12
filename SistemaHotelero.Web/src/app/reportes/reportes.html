@@ -1,0 +1,121 @@
+<section class="page" aria-labelledby="reports-title" [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <h1 id="reports-title">Reportes</h1>
+      <p>Consulta la ocupación prevista, las reservas y los cobros por período.</p>
+    </div>
+    <div class="report-actions no-print">
+      <button class="action secondary" type="button" [disabled]="loading()" (click)="exportCsv()">
+        Descargar CSV
+      </button>
+      <button class="action secondary" type="button" [disabled]="loading()" (click)="print()">
+        Imprimir o guardar PDF
+      </button>
+    </div>
+  </header>
+  <p class="demo-note-inline">
+    Datos de demostración. La fecha de operación de la demo es {{ referenceDate }}.
+  </p>
+  <form
+    class="reception-panel report-filters no-print"
+    (submit)="$event.preventDefault(); apply()"
+    novalidate
+  >
+    <label class="field"
+      >Desde<input #from type="date" [value]="start()" (input)="start.set(from.value)"
+    /></label>
+    <label class="field"
+      >Hasta (sin incluir)<input #to type="date" [value]="end()" (input)="end.set(to.value)"
+    /></label>
+    <button class="action primary" type="submit" [disabled]="loading()">Aplicar fechas</button>
+  </form>
+  @if (error()) {
+    <p class="form-error report-feedback" role="alert">{{ error() }}</p>
+  } @else {
+    <p class="report-feedback" role="status">
+      Período mostrado: {{ range().start }} a {{ range().end }} (sin incluir).
+    </p>
+  }
+  <div class="report-grid">
+    @if (loading()) {
+      @for (item of [1, 2, 3, 4]; track item) {
+        <app-skeleton [height]="110" />
+      }
+    } @else {
+      <article class="reception-panel metric">
+        <h2>Ocupación prevista</h2>
+        <strong>{{ occupancy().rate | percent: '1.0-1' }}</strong
+        ><small
+          >{{ occupancy().used }} de {{ occupancy().capacity }} noches de habitación
+          comprometidas</small
+        >
+      </article>
+      <article class="reception-panel metric">
+        <h2>Reservaciones</h2>
+        <strong>{{ active().length }}</strong
+        ><small>{{ cancelled() }} canceladas en el período</small>
+      </article>
+      <article class="reception-panel metric">
+        <h2>Cobros registrados</h2>
+        <strong>{{ collected() | currency: 'USD' }}</strong
+        ><small>{{ receipts().length }} comprobantes de prueba</small>
+      </article>
+      <article class="reception-panel metric">
+        <h2>Consumo de restaurante cobrado</h2>
+        <strong>{{ restaurant() | currency: 'USD' }}</strong
+        ><small>Incluido en los cobros. Considera mesas y consumos cargados a habitación.</small>
+      </article>
+    }
+  </div>
+  @if (!loading()) {
+    <div class="report-detail">
+      <section class="reception-panel" aria-labelledby="daily-title">
+        <h2 id="daily-title">Actividad por día</h2>
+        <div class="report-table" role="region" aria-label="Actividad por día" tabindex="0">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">Habitaciones comprometidas</th>
+                <th scope="col">Llegadas</th>
+                <th scope="col">Salidas</th>
+                <th scope="col">Cobrado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of daily(); track row.date) {
+                <tr>
+                  <th scope="row">{{ row.date | date: 'dd/MM/yyyy' : 'UTC' }}</th>
+                  <td>{{ row.used }} / {{ row.capacity }}</td>
+                  <td>{{ row.arrivals }}</td>
+                  <td>{{ row.departures }}</td>
+                  <td>{{ row.collected | currency: 'USD' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Las llegadas y salidas corresponden a fechas programadas. La ocupación se calcula sobre
+          habitaciones operativas.
+        </p>
+      </section>
+      <section class="reception-panel" aria-labelledby="methods-title">
+        <h2 id="methods-title">Cobros por método</h2>
+        <dl>
+          @for (row of paymentMethods(); track row.method) {
+            <div>
+              <dt>
+                {{ row.method }} <small>({{ row.count }})</small>
+              </dt>
+              <dd>{{ row.amount | currency: 'USD' }}</dd>
+            </div>
+          }
+        </dl>
+        <p>
+          Hospedaje cobrado <strong>{{ collected() - restaurant() | currency: 'USD' }}</strong>
+        </p>
+      </section>
+    </div>
+  }
+</section>

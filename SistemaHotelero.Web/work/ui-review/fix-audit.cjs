@@ -1,0 +1,1 @@
+const fs=require('fs');const p='work/ui-review/dashboard-guest.cjs';let c=fs.readFileSync(p,'utf8');c=c.replace("page.getByRole('link',{name:'Inicio',exact:true})",`page.locator('nav a[href="/visitar"]')`);c=c.replace("page.getByRole('link',{name:'Restaurante',exact:true})",`page.locator('nav a[href="/explorar/restaurante"]')`);fs.writeFileSync(p,c);

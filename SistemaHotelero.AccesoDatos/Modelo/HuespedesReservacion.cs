@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SistemaHotelero.AccesoDatos.Modelo;
@@ -9,7 +9,9 @@ public partial class HuespedesReservacion
 
     public int ReservacionHabitacionId { get; set; }
 
-    public byte? TipoDocumento { get; set; }
+    public byte? TipoDocumentoId { get; set; }
+
+    public virtual TipoDocumento? TipoDocumento { get; set; }
 
     public string? NumeroDocumento { get; set; }
 

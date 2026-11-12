@@ -1,0 +1,37 @@
+.invoice {
+  max-width: 720px;
+  padding: 18px;
+}
+
+.invoice h2 {
+  margin-top: 0;
+}
+
+.invoice-lines p,
+.invoice dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-block: 8px;
+  margin: 0;
+}
+
+.invoice dd {
+  margin: 0;
+  font-weight: 650;
+}
+
+.invoice-row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.empty-link {
+  margin: 0 16px 16px;
+}
+
+@media (max-width: 460px) {
+  .invoice-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
